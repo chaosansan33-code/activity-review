@@ -1762,6 +1762,13 @@ function renderPigCardStage2(){
     toast("🐽 已儲存：+3 成長石（回到剛剛流程）");
     render();
   };
+  // 跳過豬隊友（不扣成長石）
+document.getElementById("btnPigSkip")?.addEventListener("click", () => {
+  GAME.stage2.pig.usedInRound[GAME.turn.stageRound] = true;
+  GAME.stage2.pig.active = false;
+  GAME.ui.pendingIntroKey = null;
+  render();
+});
 }
 
 /** =========================
@@ -2229,6 +2236,7 @@ $("#btnExportCSV").onclick = ()=> exportCSV();
 </script>
 </body>
 </html>
+
 
 
 
