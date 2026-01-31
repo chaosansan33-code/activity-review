@@ -819,7 +819,7 @@ function canTriggerPigThisRound(){
 function maybeTriggerPigEvent(){
   // 只在 Stage2 而且「回合開始」時判斷
   if(GAME.stage !== "s2") return false;
-  if(GAME.stage2.pig.active) return true; // 已經在豬卡畫面
+  if(GAME.stage2.pig.active) return false; // 已經在豬卡畫面
   if(!canTriggerPigThisRound()) return false;
 
   // 隨機機率
@@ -2228,6 +2228,7 @@ $("#btnExportCSV").onclick = ()=> exportCSV();
 </script>
 </body>
 </html>
+
 
 
 
