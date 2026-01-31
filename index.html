@@ -67,6 +67,7 @@
     }
     .btn.small{ padding:7px 10px; border-radius:12px; font-size:13px; }
     .btn.tiny{ padding:6px 9px; border-radius:11px; font-size:12px; box-shadow:none; }
+
     .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
     .grid{
       display:grid;
@@ -141,15 +142,16 @@
     .pill.danger{ background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.25); }
     .two{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
     @media (max-width: 680px){ .two{ grid-template-columns: 1fr; } }
+
     .toast{
-      position:fixed;
-      right:14px; bottom:14px;
+      position:fixed; right:14px; bottom:14px;
       background:#111827; color:#fff;
       padding:10px 12px; border-radius:14px;
       box-shadow: 0 16px 30px rgba(0,0,0,.25);
       max-width: 360px; z-index:80;
       display:none;
     }
+
     details{
       border:1px solid var(--line);
       background:#fff;
@@ -165,6 +167,7 @@
       gap:10px;
     }
     summary::-webkit-details-marker{ display:none; }
+
     .listItem{
       border:1px solid var(--line);
       border-radius:16px;
@@ -211,10 +214,49 @@
       display:grid; grid-template-columns: 1fr auto auto; gap:8px; align-items:center;
       border:1px solid var(--line); border-radius:16px; background:#fff; padding:10px 12px;
     }
-    .mono{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size:12px;
-      color:#6b7280;
+
+    /* ===== Stage Intro Overlay ===== */
+    .overlay{
+      position:fixed; inset:0;
+      display:none;
+      align-items:center; justify-content:center;
+      background: rgba(17,24,39,.55);
+      z-index: 120;
+      padding: 14px;
+      backdrop-filter: blur(6px);
+    }
+    .overlay .box{
+      width:min(860px, 100%);
+      border-radius: 22px;
+      background: #fff;
+      border: 1px solid rgba(255,255,255,.5);
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+      overflow:hidden;
+    }
+    .overlay .mediaWrap{
+      background: #0b1220;
+      display:grid;
+      place-items:center;
+      max-height: 72vh;
+    }
+    .overlay img, .overlay video{
+      width:100%;
+      height:auto;
+      display:block;
+      object-fit:contain;
+    }
+    .overlay .foot{
+      padding: 12px 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      border-top: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff, #fafafa);
+    }
+    .overlay .titleLine{
+      font-weight: 900;
+      color: #111827;
     }
   </style>
 </head>
@@ -242,25 +284,70 @@
 
   <div class="toast" id="toast"></div>
 
+  <!-- Stage Intro / Pig Intro Overlay -->
+  <div class="overlay" id="introOverlay" aria-hidden="true">
+    <div class="box">
+      <div class="mediaWrap" id="introMediaWrap"></div>
+      <div class="foot">
+        <div>
+          <div class="titleLine" id="introTitle">開始</div>
+          <div class="hint" id="introHint">點擊繼續</div>
+        </div>
+        <button class="btn primary" id="introContinue">👉 耶！繼續</button>
+      </div>
+    </div>
+  </div>
+
 <script>
+/** =========================
+ *  你要插入的圖片 / MP4 在這裡改
+ *  =========================
+ *  type: "image" | "video"
+ *  src: 你的路徑（可相對或完整網址）
+ *
+ *  建議：把檔案放在同一資料夾的 /assets/ 內
+ *  例：assets/stage1.mp4、assets/stage2.png
+ */
+const INTRO_MEDIA = {
+  lobby: { type:"image", src:"assets/intro_lobby.png", title:"準備開始", hint:"點擊繼續" },
+  s1:    { type:"video", src:"assets/intro_stage1.mp4", title:"Stage 1｜事件回顧", hint:"點擊繼續" },
+  s2:    { type:"image", src:"assets/intro_stage2.png", title:"Stage 2｜問題挖掘", hint:"點擊繼續" },
+  s3:    { type:"image", src:"assets/intro_stage3.png", title:"Stage 3｜點子生成", hint:"點擊繼續" },
+  vote:  { type:"image", src:"assets/intro_vote.png",  title:"投票｜資源幣", hint:"點擊繼續" },
+  s4:    { type:"image", src:"assets/intro_stage4.png", title:"Stage 4｜行動契約", hint:"點擊繼續" },
+  done:  { type:"image", src:"assets/intro_done.png", title:"恭喜完成", hint:"點擊繼續" },
+};
+
+// 豬隊友卡出現前的圖片或 mp4（你要的「標題出現前也要」）
+const PIG_INTRO_MEDIA = {
+  type: "video",
+  src: "assets/intro_pig.mp4",
+  title: "🎉 驚喜！🐽 豬豬現身！",
+  hint: "點擊繼續"
+};
+
+// 豬隊友卡隨機機率（0~1）
+// 例：0.25 = 25% 機率在某位玩家回合開始觸發
+const PIG_CHANCE = 0.25;
+
 /** =========================
  *  Storage
  *  ========================= */
-const LS_LIB = "tsh_proto_lib_v3";
-const LS_GAME = "tsh_proto_game_v3";
+const LS_LIB = "tsh_proto_lib_v4";
+const LS_GAME = "tsh_proto_game_v4";
 
 /** =========================
  *  Defaults
  *  ========================= */
 const REACT_EMOS = ["👍","😂","😭","🔥","🫶"];
 const WORD_SMALL_MISTAKE = "小失誤";
+const PIG_TITLE_LINE = "🎉 驚喜！🐽 豬豬現身！";
 
 function uid(){
   return "u_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
 }
 
 function getDefaultLibrary(){
-  // Stage1 用「事件卡」題目
   return [
     {id:uid(), title:"宣傳啟動", text:"你們是怎麼開展的？反應如何？", icon:"📣"},
     {id:uid(), title:"前一天夜晚", text:"當時有什麼最後急救情況？", icon:"🛎️"},
@@ -268,7 +355,7 @@ function getDefaultLibrary(){
     {id:uid(), title:"臨場突發", text:"有沒有誰做了神救援？或反而更亂？", icon:"⚡"},
     {id:uid(), title:"現場互動", text:"觀眾/參與者的反應有什麼意外？", icon:"🧑‍🤝‍🧑"},
 
-    /* ✅ 新增事件卡（你給的 5 張） */
+    // ✅ 你新增的 5 張
     {id:uid(), title:"工作分配", text:"工作是怎麼分的？有人做得特別多或特別少嗎？", icon:"🧩"},
     {id:uid(), title:"意見衝突", text:"當大家想法不同時，是怎麼做決定的？", icon:"⚡"},
     {id:uid(), title:"隱形勞動", text:"有沒有被忽略卻很重要的工作？誰在做？", icon:"👀"},
@@ -311,22 +398,34 @@ function newGame(){
       stageRound: 1,
     },
 
+    ui:{
+      // 只要這裡有 pendingKey，就會先彈出圖片/mp4
+      pendingIntroKey: null,
+      // 記錄已播過的 stage intro（每個 stage 進來只播一次）
+      shownStageIntro: {}
+    },
+
     decks:{
       eventUsed: [],
     },
     currentCard: null,
 
-    // Stage 2：小失誤 deck（不重複）
+    // Stage 2：小失誤 deck（不重複） + 豬隊友卡狀態
     stage2:{
-      mistakeDeck: [], // [{fromPlayerId, fromPlayerName, text, sourceLogId}]
+      mistakeDeck: [],
       pointer: 0,
       current: null,
+
+      pig: {
+        usedInRound: {},   // {1:true, 2:true}  每一輪最多一次
+        active: false      // 正在顯示豬隊友卡
+      }
     },
 
     // Stage 3：原因池（每個原因最多2次）
     stage3:{
-      current: null, // {text, sourceLogId}
-      usage: {},     // {sourceLogId: count}
+      current: null,
+      usage: {},
       capPerCause: 2
     },
 
@@ -337,7 +436,7 @@ function newGame(){
     },
 
     stage4:{
-      contracts: [] // {playerId, ideaId, causeText, ideaText, canDo, help, ts}
+      contracts: []
     },
 
     logs: [],
@@ -408,6 +507,87 @@ function shuffle(arr){
   return a;
 }
 
+/** =========================
+ *  Intro Overlay system
+ *  ========================= */
+function requestStageIntroIfNeeded(stage){
+  GAME.ui = GAME.ui || {pendingIntroKey:null, shownStageIntro:{}};
+  GAME.ui.shownStageIntro = GAME.ui.shownStageIntro || {};
+  // 每個 stage 進來只播一次
+  if(!GAME.ui.shownStageIntro[stage]){
+    GAME.ui.pendingIntroKey = `stage:${stage}`;
+  }
+}
+
+function requestPigIntro(){
+  GAME.ui = GAME.ui || {pendingIntroKey:null, shownStageIntro:{}};
+  GAME.ui.pendingIntroKey = "pig";
+}
+
+function renderIntroOverlayIfPending(){
+  const key = GAME.ui?.pendingIntroKey;
+  if(!key) return false;
+
+  let media = null;
+
+  if(key.startsWith("stage:")){
+    const stage = key.split(":")[1];
+    media = INTRO_MEDIA[stage] || null;
+    // 記一下「這個 stage intro 已播過」
+    GAME.ui.shownStageIntro = GAME.ui.shownStageIntro || {};
+    GAME.ui.shownStageIntro[stage] = true;
+  }else if(key==="pig"){
+    media = PIG_INTRO_MEDIA;
+  }
+
+  // 如果沒設定媒體，就直接略過
+  if(!media || !media.src){
+    GAME.ui.pendingIntroKey = null;
+    return false;
+  }
+
+  const overlay = $("#introOverlay");
+  const wrap = $("#introMediaWrap");
+  const titleEl = $("#introTitle");
+  const hintEl  = $("#introHint");
+  const btn     = $("#introContinue");
+
+  titleEl.textContent = media.title || "開始";
+  hintEl.textContent  = media.hint  || "點擊繼續";
+
+  wrap.innerHTML = "";
+  if(media.type==="video"){
+    const v = document.createElement("video");
+    v.src = media.src;
+    v.autoplay = true;
+    v.muted = true;      // 避免瀏覽器擋自動播放
+    v.playsInline = true;
+    v.loop = true;
+    v.controls = false;
+    wrap.appendChild(v);
+  }else{
+    const img = document.createElement("img");
+    img.src = media.src;
+    img.alt = media.title || "intro";
+    wrap.appendChild(img);
+  }
+
+  overlay.style.display = "flex";
+  overlay.setAttribute("aria-hidden","false");
+
+  btn.onclick = ()=>{
+    overlay.style.display = "none";
+    overlay.setAttribute("aria-hidden","true");
+    GAME.ui.pendingIntroKey = null;
+    saveGame();
+    // intro 關掉後再 render 一次，才能看到該階段內容
+    render();
+  };
+
+  saveGame();
+  return true;
+}
+
 /** Event cards **/
 function drawEventCard(){
   const deck = LIB;
@@ -463,6 +643,7 @@ function nextTurnOrStage(){
     GAME.currentCard = null;
     GAME.stage3.current = null;
     GAME.stage2.current = null;
+    GAME.stage2.pig.active = false;
     return;
   }
 
@@ -471,6 +652,7 @@ function nextTurnOrStage(){
   GAME.currentCard = null;
   GAME.stage3.current = null;
   GAME.stage2.current = null;
+  GAME.stage2.pig.active = false;
 
   const totalRounds = stageTotalRounds(GAME.stage);
   if(GAME.turn.stageRound > totalRounds){
@@ -489,11 +671,16 @@ function goNextStage(){
   GAME.currentCard = null;
   GAME.stage3.current = null;
   GAME.stage2.current = null;
+  GAME.stage2.pig.active = false;
 
   if(next==="s2") buildStage2MistakeDeckIfNeeded(true);
   if(next==="s3") initStage3UsageIfNeeded(true);
   if(next==="vote") initVoteIfNeeded(true);
+
+  // ✅ 每個階段開始前 intro
+  requestStageIntroIfNeeded(next);
 }
+
 function goStage(stage){
   GAME.stage = stage;
   GAME.turn.playerIndex = 0;
@@ -501,10 +688,14 @@ function goStage(stage){
   GAME.currentCard = null;
   GAME.stage3.current = null;
   GAME.stage2.current = null;
+  GAME.stage2.pig.active = false;
 
   if(stage==="s2") buildStage2MistakeDeckIfNeeded(true);
   if(stage==="s3") initStage3UsageIfNeeded(true);
   if(stage==="vote") initVoteIfNeeded(true);
+
+  // ✅ 每個階段開始前 intro
+  requestStageIntroIfNeeded(stage);
 }
 
 /** Logs **/
@@ -589,6 +780,30 @@ function ensureStage2Mistake(){
 }
 
 /** =========================
+ *  Stage 2: pig event (max once per round)
+ *  ========================= */
+function canTriggerPigThisRound(){
+  const r = GAME.turn.stageRound;
+  GAME.stage2.pig.usedInRound = GAME.stage2.pig.usedInRound || {};
+  return !GAME.stage2.pig.usedInRound[r];
+}
+function maybeTriggerPigEvent(){
+  // 只在 Stage2 而且「回合開始」時判斷
+  if(GAME.stage !== "s2") return false;
+  if(GAME.stage2.pig.active) return true; // 已經在豬卡畫面
+  if(!canTriggerPigThisRound()) return false;
+
+  // 隨機機率
+  if(Math.random() < PIG_CHANCE){
+    GAME.stage2.pig.active = true;
+    // ✅ 豬隊友標題出現前，先播 intro
+    requestPigIntro();
+    return true;
+  }
+  return false;
+}
+
+/** =========================
  *  Stage 3: cause pool, each cause max 2 times
  *  ========================= */
 function getStage2Causes(){
@@ -616,7 +831,6 @@ function drawCauseMaxTwice(){
 
   const eligible = pool.filter(x => (usage[x.sourceLogId]||0) < cap);
 
-  // 正常情況：還有可抽的
   if(eligible.length){
     const pick = eligible[Math.floor(Math.random()*eligible.length)];
     usage[pick.sourceLogId] = (usage[pick.sourceLogId]||0) + 1;
@@ -624,7 +838,6 @@ function drawCauseMaxTwice(){
     return pick;
   }
 
-  // 極端情況：全部都達到2次（避免卡死，放寬一次，但會提示）
   const pick = pool[Math.floor(Math.random()*pool.length)];
   toast("⚠️ 所有原因已達2次上限（暫時放寬抽取以避免卡住）");
   return pick;
@@ -641,7 +854,6 @@ function ensureStage3Cause(){
  *  Voting data
  *  ========================= */
 function getStage3Ideas(){
-  // Stage3 submission log itself is the ideaId; include causePrompt so Stage4可顯示原因+點子
   return (GAME.logs||[])
     .filter(l=>l.stage==="s3" && l.kind==="s3" && (l.fields?.idea||"").trim().length>0)
     .map(l=>({
@@ -708,14 +920,12 @@ function csvEscape(v){
 function formatDate(ts){
   try{ return new Date(ts).toISOString(); }catch{ return ""; }
 }
-
 function encodeUTF16LE(str){
-  // returns Uint8Array with UTF-16LE bytes (no BOM here)
   const buf = new Uint8Array(str.length * 2);
   for(let i=0;i<str.length;i++){
     const code = str.charCodeAt(i);
-    buf[i*2] = code & 0xFF;         // low byte
-    buf[i*2+1] = (code >> 8) & 0xFF; // high byte
+    buf[i*2] = code & 0xFF;
+    buf[i*2+1] = (code >> 8) & 0xFF;
   }
   return buf;
 }
@@ -731,9 +941,8 @@ function exportCSV(){
     "type","ts","stage","round","player",
     "s1_success",`s1_${WORD_SMALL_MISTAKE}`,"s1_card_answer","s1_card_title","s1_card_text","s1_card_icon",
     `s2_${WORD_SMALL_MISTAKE}_prompt`,"s2_cause",
+    "pig_mistake","pig_avoid",
     "s3_cause_prompt","s3_idea",
-    "vote_idea_id","vote_idea_cause","vote_idea_text","vote_total",
-    "contract_cause","contract_idea","contract_can_do","contract_help",
     "react_👍","react_😂","react_😭","react_🔥","react_🫶"
   ]);
 
@@ -756,15 +965,11 @@ function exportCSV(){
       f.smallMistakePrompt||"",
       f.cause||"",
 
+      f.pigMistake||"",
+      f.pigAvoid||"",
+
       f.causePrompt||"",
       f.idea||"",
-
-      "", "", "", "",
-
-      f.contractCause||"",
-      f.contractIdea||"",
-      f.contractCanDo||"",
-      f.contractHelp||"",
 
       (l.reacts?.["👍"]||[]).length,
       (l.reacts?.["😂"]||[]).length,
@@ -781,16 +986,6 @@ function exportCSV(){
   });
 
   rows.push([]);
-  rows.push(["type","voter","idea_id","votes"]);
-  const alloc = GAME.vote.allocations || {};
-  ps.forEach(p=>{
-    Object.entries(alloc).forEach(([ideaId,val])=>{
-      const n = val.byPlayer?.[p.id] || 0;
-      if(n>0) rows.push(["vote", p.name, ideaId, n]);
-    });
-  });
-
-  rows.push([]);
   rows.push(["type","ts","player","cause","idea","can_do","help"]);
   contracts.forEach(c=>{
     rows.push(["contract", formatDate(c.ts), (getPlayer(c.playerId)?.name||""), c.causeText||"", c.ideaText||"", c.canDo||"", c.help||""]);
@@ -801,8 +996,6 @@ function exportCSV(){
   ps.forEach(p=> rows.push(["player", p.name, p.growth||0]));
 
   const csv = rows.map(r=>r.map(csvEscape).join(",")).join("\n");
-
-  // ✅ UTF-16LE BOM for Excel
   const bom = new Uint8Array([0xFF, 0xFE]);
   const data = encodeUTF16LE(csv);
   const blob = new Blob([bom, data], {type:"text/csv;charset=utf-16le"});
@@ -836,6 +1029,9 @@ function render(){
   setAccent(GAME.meta.accent);
   saveGame();
 
+  // ✅ 若有 pending intro，先顯示 overlay（會阻擋後面的畫面）
+  if(renderIntroOverlayIfPending()) return;
+
   if(GAME.stage==="lobby"){
     setModeBadge("Lobby");
     renderLobby();
@@ -867,7 +1063,7 @@ function render(){
   }
 }
 
-/** Side panel: players + card editor + logs wall **/
+/** Side panel **/
 function renderSide(showStrategyInfo=false){
   const ps = getPlayers();
   const cur = currentPlayer();
@@ -1040,7 +1236,6 @@ function renderSide(showStrategyInfo=false){
       const removed = LIB.splice(idx,1);
       saveLibrary();
       toast(`已刪除：${removed?.[0]?.title || "卡片"}`);
-      // 若正在抽這張卡，避免卡住
       if(GAME.currentCard && removed[0] && GAME.currentCard.id === removed[0].id){
         GAME.currentCard = null;
       }
@@ -1116,6 +1311,12 @@ function renderLogsWall(){
             <span class="hint">${escapeHtml(f.cardText||"")}</span>
           </div>
         `;
+      }else if(l.stage==="s2" && l.kind==="pig"){
+        body = `
+          <div class="hint"><b>${PIG_TITLE_LINE}</b></div>
+          <div class="hint"><b>錯：</b>${escapeHtml(f.pigMistake||"")}</div>
+          <div class="hint"><b>如何避免：</b>${escapeHtml(f.pigAvoid||"")}</div>
+        `;
       }else if(l.stage==="s2"){
         body = `
           <div class="hint"><b>${WORD_SMALL_MISTAKE}：</b>${escapeHtml(f.smallMistakePrompt||"")}</div>
@@ -1176,9 +1377,10 @@ function renderLobby(){
     <div class="hint">
       Stage1：成功＋${WORD_SMALL_MISTAKE}＋回答事件卡問題（+1🪨）｜2輪<br/>
       Stage2：從所有${WORD_SMALL_MISTAKE}隨機抽（不重複）→ 填「為什麼會發生」（+1🪨）｜2輪<br/>
+      ★ Stage2：可能隨機出現「豬隊友卡」，每輪最多一次（儲存 +3🪨）<br/>
       Stage3：從所有原因隨機抽（每個原因最多2次）→ 寫點子（+1🪨）｜2輪<br/>
       投票：每人 7 枚資源幣 → TOP5 點子<br/>
-      Stage4：每人選 TOP5 之一填契約（顯示原因+點子；不需期限）→ 結束詢問匯出 CSV
+      Stage4：每人選 TOP5 之一填契約（顯示原因+點子）→ 結束詢問匯出 CSV
     </div>
     <div class="hr"></div>
 
@@ -1313,7 +1515,6 @@ function renderStage1(){
         success,
         smallMistake,
         cardAnswer,
-        // ✅ 記錄抽到什麼卡（不顯示 cardId）
         cardTitle: card.title,
         cardText: card.text,
         cardIcon: card.icon || ""
@@ -1340,6 +1541,18 @@ function renderStage2(){
   const ps = getPlayers();
   const p = currentPlayer();
   if(!p){ goStage("lobby"); return render(); }
+
+// ✅ 先嘗試觸發豬隊友卡（每輪最多一次）
+// 觸發後立刻重新 render，讓 overlay 先跳出來（一定在填寫前）
+if(maybeTriggerPigEvent()){
+  saveGame();
+  return render();
+}
+
+  // 若豬隊友卡目前是 active，直接顯示豬隊友卡 UI
+  if(GAME.stage2.pig.active){
+    return renderPigCardStage2();
+  }
 
   buildStage2MistakeDeckIfNeeded(false);
   const mistakeItem = ensureStage2Mistake();
@@ -1436,6 +1649,87 @@ function renderStage2(){
 
     if(GAME.stage==="s3") initStage3UsageIfNeeded(true);
 
+    render();
+  };
+}
+
+/** Stage2: Pig card UI **/
+function renderPigCardStage2(){
+  const ps = getPlayers();
+  const p = currentPlayer();
+  if(!p) return;
+
+  mainPanel.innerHTML = `
+    <h2 style="margin:0 0 6px">${escapeHtml(PIG_TITLE_LINE)}</h2>
+    <div class="hint">
+      本輪限定事件：請填入「一個錯」與「如何避免」。儲存後你會得到 <b>+3</b> 顆成長石。<br/>
+      （同一輪 Stage2 最多出現一次，儲存後回到原本流程）
+    </div>
+    <div class="hr"></div>
+
+    <div class="row" style="justify-content:space-between">
+      <div class="chip ok">輪到：<b>${escapeHtml(p.name)}</b>（${GAME.turn.playerIndex+1}/${ps.length}）</div>
+      <div class="chip warn">輪數：第 <b>${GAME.turn.stageRound}</b> 輪</div>
+    </div>
+
+    <div style="height:10px"></div>
+    <div class="card">
+      <div class="head">
+        <div class="title">
+          <div class="icon">🐽</div>
+          <div>
+            <div style="font-weight:900">${escapeHtml(PIG_TITLE_LINE)}</div>
+            <div class="hint">要點擊「耶！繼續」才能回到剛剛流程</div>
+          </div>
+        </div>
+        <span class="pill danger">豬隊友卡</span>
+      </div>
+      <div class="body">
+        <div class="two">
+          <div>
+            <label class="hint">犯的一個錯（自己或他人）</label>
+            <textarea id="pigMistake" maxlength="140" placeholder="例：忘記通知某組、臨時改流程沒同步…"></textarea>
+          </div>
+          <div>
+            <label class="hint">該如何避免</label>
+            <textarea id="pigAvoid" maxlength="140" placeholder="例：建立通知清單、雙人確認、固定流程版本…"></textarea>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+        <div class="row" style="justify-content:flex-end">
+          <button class="btn primary" id="btnPigSave">💾 儲存（+3🪨）👉 耶！繼續</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  $("#btnPigSave").onclick = ()=>{
+    const pigMistake = ($("#pigMistake").value||"").trim();
+    const pigAvoid   = ($("#pigAvoid").value||"").trim();
+    if(!pigMistake || !pigAvoid) return toast("兩格都要填");
+
+    // 記錄 log
+    addLog({
+      playerId: p.id,
+      playerName: p.name,
+      kind: "pig",
+      prompt: PIG_TITLE_LINE,
+      fields: { pigMistake, pigAvoid },
+      reacts: {}
+    });
+
+    // +3 成長石
+    addGrowth(p.id, 3);
+
+    // 同一輪最多一次 → 標記 used
+    GAME.stage2.pig.usedInRound = GAME.stage2.pig.usedInRound || {};
+    GAME.stage2.pig.usedInRound[GAME.turn.stageRound] = true;
+
+    // 關掉豬卡，回到 Stage2 原流程（同一位玩家繼續抽小失誤）
+    GAME.stage2.pig.active = false;
+
+    toast("🐽 已儲存：+3 成長石（回到剛剛流程）");
     render();
   };
 }
@@ -1701,7 +1995,7 @@ function renderVote(){
 }
 
 /** =========================
- *  Stage 4 (Contracts from TOP5, show cause+idea)
+ *  Stage 4 (Contracts)
  *  ========================= */
 function renderStage4(){
   const ps = getPlayers();
@@ -1809,6 +2103,7 @@ function renderStage4(){
           const ok = confirm("🎉 恭喜完成本局！\n\n是否現在匯出 CSV？\n（按『取消』就先不匯出，資料仍保留）");
           if(ok) exportCSV();
           GAME.stage = "done";
+          requestStageIntroIfNeeded("done");
           render();
         }, 50);
       }else{
@@ -1896,7 +2191,11 @@ $("#btnReset").onclick = ()=> hardReset();
 $("#btnExportCSV").onclick = ()=> exportCSV();
 
 /** Start **/
-render();
+(function boot(){
+  // 若一開始就想在 lobby 也播 intro，可以打開下面這行
+  // requestStageIntroIfNeeded("lobby");
+  render();
+})();
 </script>
 </body>
 </html>
