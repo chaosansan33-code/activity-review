@@ -1,0 +1,1902 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>天下書院：拆解．重組</title>
+  <style>
+    :root{
+      --bg:#f7f4ee;
+      --panel:#ffffffcc;
+      --text:#1f2430;
+      --muted:#6b7280;
+      --line:#e6e2d9;
+      --shadow: 0 10px 30px rgba(0,0,0,.08);
+      --radius: 18px;
+      --accent:#ff6b9b;
+      --danger:#ff4d4f;
+      --warn:#f59e0b;
+      --ok:#22c55e;
+      --ink:#111827;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      color:var(--text);
+      background: radial-gradient(1200px 700px at 15% 10%, #fff 0%, var(--bg) 55%, #f0ede6 100%);
+      min-height:100vh;
+    }
+    .app{ max-width:1200px; margin:0 auto; padding:18px 14px 60px; }
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:12px 14px; border:1px solid var(--line); background:var(--panel);
+      border-radius:var(--radius); box-shadow:var(--shadow);
+      position:sticky; top:10px; z-index:30; backdrop-filter: blur(10px);
+    }
+    .brand{ display:flex; align-items:center; gap:10px; font-weight:900; letter-spacing:.3px; }
+    .brand .logo{
+      width:34px; height:34px; border-radius:12px;
+      background: linear-gradient(135deg, var(--accent), #ffd27a);
+      box-shadow: 0 10px 25px rgba(255,107,155,.22);
+    }
+    .badge{
+      font-size:12px; padding:4px 10px; border-radius:999px;
+      border:1px solid var(--line); background:#fff; color:var(--muted);
+    }
+    .btn{
+      border:1px solid var(--line); background:#fff; color:var(--ink);
+      padding:9px 12px; border-radius:14px; cursor:pointer; font-weight:800;
+      display:inline-flex; align-items:center; gap:8px;
+      transition: transform .05s ease, box-shadow .2s ease, background .2s ease;
+      box-shadow: 0 8px 18px rgba(0,0,0,.06);
+      user-select:none;
+    }
+    .btn:hover{ transform: translateY(-1px); }
+    .btn:active{ transform: translateY(0px); box-shadow:none; }
+    .btn.primary{
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--accent), #ffd27a);
+      color:#111;
+    }
+    .btn.ghost{ background: transparent; box-shadow:none; }
+    .btn.danger{
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--danger), #ff9aa2);
+      color:#111;
+    }
+    .btn.small{ padding:7px 10px; border-radius:12px; font-size:13px; }
+    .btn.tiny{ padding:6px 9px; border-radius:11px; font-size:12px; box-shadow:none; }
+    .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.08fr .92fr;
+      gap:14px;
+      margin-top:14px;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+      .topbar{ position:static; }
+    }
+    .panel{
+      border:1px solid var(--line); background:var(--panel);
+      border-radius:var(--radius); box-shadow:var(--shadow);
+      padding:14px; backdrop-filter: blur(10px);
+    }
+    .hint{ font-size:12px; color:var(--muted); line-height:1.4; }
+    .hr{ height:1px; background:var(--line); margin:10px 0; }
+    .input, textarea, select{
+      width:100%;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#fff;
+      outline:none;
+      font-size:14px;
+    }
+    textarea{ min-height:88px; resize:vertical; }
+    .chip{
+      padding:6px 10px; border-radius:999px;
+      border:1px solid var(--line); background:#fff;
+      font-size:12px; font-weight:900; color:var(--muted);
+      display:inline-flex; gap:6px; align-items:center;
+    }
+    .chip.ok{ color:#0f5132; background:#e7f6ee; border-color:#c7ead6; }
+    .chip.warn{ color:#7c4a03; background:#fff3d6; border-color:#f7e1a6; }
+    .chip.danger{ color:#6b1220; background:#ffe1e1; border-color:#ffc2c2; }
+    .card{
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:#fff;
+      box-shadow: 0 12px 24px rgba(0,0,0,.06);
+      overflow:hidden;
+    }
+    .card .head{
+      padding:12px 14px;
+      display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff, #fafafa);
+    }
+    .card .title{
+      font-weight:900;
+      display:flex; align-items:center; gap:10px;
+    }
+    .icon{
+      width:30px; height:30px; border-radius:12px;
+      background: linear-gradient(135deg, rgba(255,107,155,.9), rgba(255,210,122,.9));
+      display:grid; place-items:center; font-weight:900;
+      box-shadow: 0 10px 18px rgba(255,107,155,.18);
+    }
+    .card .body{ padding:14px; }
+    .bigQ{ font-size:18px; font-weight:900; line-height:1.25; }
+    .sub{ font-size:13px; color:var(--muted); line-height:1.5; margin-top:6px; }
+    .pill{
+      font-size:12px; padding:5px 10px; border-radius:999px;
+      background:#f3f4f6; border:1px solid #e5e7eb;
+      color:#374151; font-weight:800; display:inline-flex; gap:6px; align-items:center;
+    }
+    .pill.accent{ background: rgba(255,107,155,.12); border-color: rgba(255,107,155,.25); }
+    .pill.ok{ background: rgba(34,197,94,.12); border-color: rgba(34,197,94,.25); }
+    .pill.warn{ background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.25); }
+    .pill.danger{ background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.25); }
+    .two{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    @media (max-width: 680px){ .two{ grid-template-columns: 1fr; } }
+    .toast{
+      position:fixed;
+      right:14px; bottom:14px;
+      background:#111827; color:#fff;
+      padding:10px 12px; border-radius:14px;
+      box-shadow: 0 16px 30px rgba(0,0,0,.25);
+      max-width: 360px; z-index:80;
+      display:none;
+    }
+    details{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:18px;
+      padding:10px 12px;
+      box-shadow: 0 10px 18px rgba(0,0,0,.06);
+    }
+    summary{
+      cursor:pointer;
+      font-weight:900;
+      list-style:none;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+    }
+    summary::-webkit-details-marker{ display:none; }
+    .listItem{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:10px 12px;
+      display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+      background:#fff;
+    }
+    .miniIcon{
+      width:28px;height:28px;border-radius:12px;
+      background: linear-gradient(135deg, rgba(255,107,155,.9), rgba(255,210,122,.9));
+      display:grid; place-items:center; font-weight:900;
+    }
+    .tagRow{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+    .tag{
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid #e5e7eb;
+      background:#f9fafb;
+      font-size:12px;
+      font-weight:900;
+      color:#374151;
+      cursor:pointer;
+      user-select:none;
+    }
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:12px;
+      padding:2px 6px;
+      border-radius:8px;
+      border:1px solid #e5e7eb;
+      background:#f9fafb;
+      color:#111;
+    }
+    .lockBanner{
+      padding:10px 12px;
+      border-radius:16px;
+      border:1px dashed rgba(245,158,11,.5);
+      background: rgba(245,158,11,.12);
+      color:#7c4a03;
+      font-weight:900;
+      line-height:1.45;
+    }
+    .voteGrid{
+      display:grid; grid-template-columns: 1fr auto auto; gap:8px; align-items:center;
+      border:1px solid var(--line); border-radius:16px; background:#fff; padding:10px 12px;
+    }
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:12px;
+      color:#6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          天下書院：拆解．重組 <span class="badge" id="modeBadge">Lobby</span>
+          <div class="hint">喔耶！</div>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn" id="btnExportCSV">📤 匯出CSV</button>
+        <button class="btn ghost" id="btnReset">🧹 重置本局</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel" id="mainPanel"></div>
+      <div class="panel" id="sidePanel"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+/** =========================
+ *  Storage
+ *  ========================= */
+const LS_LIB = "tsh_proto_lib_v3";
+const LS_GAME = "tsh_proto_game_v3";
+
+/** =========================
+ *  Defaults
+ *  ========================= */
+const REACT_EMOS = ["👍","😂","😭","🔥","🫶"];
+const WORD_SMALL_MISTAKE = "小失誤";
+
+function uid(){
+  return "u_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+}
+
+function getDefaultLibrary(){
+  // Stage1 用「事件卡」題目
+  return [
+    {id:uid(), title:"宣傳啟動", text:"你們是怎麼開展的？反應如何？", icon:"📣"},
+    {id:uid(), title:"前一天夜晚", text:"當時有什麼最後急救情況？", icon:"🛎️"},
+    {id:uid(), title:"開場主持", text:"當時感受到的氣氛是什麼？", icon:"💬"},
+    {id:uid(), title:"臨場突發", text:"有沒有誰做了神救援？或反而更亂？", icon:"⚡"},
+    {id:uid(), title:"現場互動", text:"觀眾/參與者的反應有什麼意外？", icon:"🧑‍🤝‍🧑"},
+
+    /* ✅ 新增事件卡（你給的 5 張） */
+    {id:uid(), title:"工作分配", text:"工作是怎麼分的？有人做得特別多或特別少嗎？", icon:"🧩"},
+    {id:uid(), title:"意見衝突", text:"當大家想法不同時，是怎麼做決定的？", icon:"⚡"},
+    {id:uid(), title:"隱形勞動", text:"有沒有被忽略卻很重要的工作？誰在做？", icon:"👀"},
+    {id:uid(), title:"時間壓力", text:"在期限逼近時，你們優先犧牲了什麼？", icon:"⏰"},
+    {id:uid(), title:"溝通斷層", text:"資訊有沒有順利傳到每個人？誰被排除在外？", icon:"📢"},
+  ];
+}
+
+function loadLibrary(){
+  const raw = localStorage.getItem(LS_LIB);
+  if(!raw){
+    const lib = getDefaultLibrary();
+    localStorage.setItem(LS_LIB, JSON.stringify(lib));
+    return lib;
+  }
+  try{
+    const lib = JSON.parse(raw);
+    if(Array.isArray(lib) && lib.length) return lib;
+  }catch{}
+  const fallback = getDefaultLibrary();
+  localStorage.setItem(LS_LIB, JSON.stringify(fallback));
+  return fallback;
+}
+function saveLibrary(){ localStorage.setItem(LS_LIB, JSON.stringify(LIB)); }
+
+/** =========================
+ *  Game State
+ *  ========================= */
+function newGame(){
+  return {
+    meta:{
+      roomTitle:"天下書院：拆解．重組｜復盤",
+      accent:"#ff6b9b",
+      players:[], // {id,name,growth}
+      createdAt: Date.now(),
+    },
+    stage: "lobby", // lobby | s1 | s2 | s3 | vote | s4 | done
+    turn:{
+      playerIndex: 0,
+      stageRound: 1,
+    },
+
+    decks:{
+      eventUsed: [],
+    },
+    currentCard: null,
+
+    // Stage 2：小失誤 deck（不重複）
+    stage2:{
+      mistakeDeck: [], // [{fromPlayerId, fromPlayerName, text, sourceLogId}]
+      pointer: 0,
+      current: null,
+    },
+
+    // Stage 3：原因池（每個原因最多2次）
+    stage3:{
+      current: null, // {text, sourceLogId}
+      usage: {},     // {sourceLogId: count}
+      capPerCause: 2
+    },
+
+    vote:{
+      coinsPerPlayer: 7,
+      donePlayerIds: [],
+      allocations: {}
+    },
+
+    stage4:{
+      contracts: [] // {playerId, ideaId, causeText, ideaText, canDo, help, ts}
+    },
+
+    logs: [],
+  };
+}
+
+function loadGame(){
+  const raw = localStorage.getItem(LS_GAME);
+  if(!raw) return newGame();
+  try{
+    const g = JSON.parse(raw);
+    if(g && typeof g==="object") return g;
+  }catch{}
+  return newGame();
+}
+function saveGame(){ localStorage.setItem(LS_GAME, JSON.stringify(GAME)); }
+
+/** =========================
+ *  Helpers
+ *  ========================= */
+let LIB = loadLibrary();
+let GAME = loadGame();
+
+const $ = (sel)=>document.querySelector(sel);
+
+function toast(msg){
+  const el = $("#toast");
+  el.textContent = msg;
+  el.style.display = "block";
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.style.display="none"; }, 2200);
+}
+
+function setModeBadge(txt){ $("#modeBadge").textContent = txt; }
+function setAccent(hex){ document.documentElement.style.setProperty("--accent", hex || "#ff6b9b"); }
+
+function getPlayers(){ return GAME.meta.players || []; }
+function currentPlayer(){
+  const ps = getPlayers();
+  return ps[GAME.turn.playerIndex] || null;
+}
+function getPlayer(pid){ return getPlayers().find(p=>p.id===pid); }
+
+function stageName(stage){
+  return ({
+    lobby:"Lobby",
+    s1:"Stage 1｜事件回顧",
+    s2:"Stage 2｜問題挖掘",
+    s3:"Stage 3｜點子生成",
+    vote:"投票｜資源幣 TOP5",
+    s4:"Stage 4｜行動契約",
+    done:"Done"
+  })[stage] || stage;
+}
+
+function escapeHtml(s){
+  return (s??"").toString().replace(/[&<>"']/g, (c)=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function shuffle(arr){
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+/** Event cards **/
+function drawEventCard(){
+  const deck = LIB;
+  if(deck.length===0) return null;
+
+  const used = GAME.decks.eventUsed || [];
+  const remaining = deck.filter(c=>!used.includes(c.id));
+  const pool = remaining.length ? remaining : deck;
+  const pick = pool[Math.floor(Math.random()*pool.length)];
+  used.push(pick.id);
+  GAME.decks.eventUsed = used;
+  return pick;
+}
+function ensureEventCard(){
+  if(GAME.currentCard) return GAME.currentCard;
+  const c = drawEventCard();
+  GAME.currentCard = c;
+  return c;
+}
+
+/** Growth stones **/
+function addGrowth(pid, n=1){
+  const p = getPlayer(pid);
+  if(!p) return;
+  p.growth = (p.growth||0) + n;
+}
+function spendGrowth(pid, n){
+  const p = getPlayer(pid);
+  if(!p) return false;
+  const g = p.growth||0;
+  if(g < n) return false;
+  p.growth = g - n;
+  return true;
+}
+
+/** Stage rounds **/
+function stageTotalRounds(stage){
+  if(stage==="s1") return 2;
+  if(stage==="s2") return 2;
+  if(stage==="s3") return 2;
+  if(stage==="vote") return 1;
+  if(stage==="s4") return 1;
+  return 1;
+}
+
+/** Turn advance **/
+function nextTurnOrStage(){
+  const ps = getPlayers();
+  if(ps.length===0) return;
+
+  if(GAME.turn.playerIndex < ps.length-1){
+    GAME.turn.playerIndex += 1;
+    GAME.currentCard = null;
+    GAME.stage3.current = null;
+    GAME.stage2.current = null;
+    return;
+  }
+
+  GAME.turn.playerIndex = 0;
+  GAME.turn.stageRound += 1;
+  GAME.currentCard = null;
+  GAME.stage3.current = null;
+  GAME.stage2.current = null;
+
+  const totalRounds = stageTotalRounds(GAME.stage);
+  if(GAME.turn.stageRound > totalRounds){
+    goNextStage();
+  }
+}
+
+/** Stage transition **/
+function goNextStage(){
+  const order = ["lobby","s1","s2","s3","vote","s4","done"];
+  const idx = order.indexOf(GAME.stage);
+  const next = order[Math.min(order.length-1, idx+1)];
+  GAME.stage = next;
+  GAME.turn.playerIndex = 0;
+  GAME.turn.stageRound = 1;
+  GAME.currentCard = null;
+  GAME.stage3.current = null;
+  GAME.stage2.current = null;
+
+  if(next==="s2") buildStage2MistakeDeckIfNeeded(true);
+  if(next==="s3") initStage3UsageIfNeeded(true);
+  if(next==="vote") initVoteIfNeeded(true);
+}
+function goStage(stage){
+  GAME.stage = stage;
+  GAME.turn.playerIndex = 0;
+  GAME.turn.stageRound = 1;
+  GAME.currentCard = null;
+  GAME.stage3.current = null;
+  GAME.stage2.current = null;
+
+  if(stage==="s2") buildStage2MistakeDeckIfNeeded(true);
+  if(stage==="s3") initStage3UsageIfNeeded(true);
+  if(stage==="vote") initVoteIfNeeded(true);
+}
+
+/** Logs **/
+function addLog(obj){
+  const base = {
+    id: uid(),
+    ts: Date.now(),
+    stage: GAME.stage,
+    round: GAME.turn.stageRound,
+    playerId: obj.playerId,
+    playerName: obj.playerName,
+    kind: obj.kind,
+    prompt: obj.prompt || "",
+    fields: obj.fields || {},
+    reacts: obj.reacts || {},
+  };
+  REACT_EMOS.forEach(e=>{ base.reacts[e] = base.reacts[e] || []; });
+  GAME.logs.push(base);
+  return base;
+}
+function toggleReact(logId, emo, byPlayerId){
+  const log = GAME.logs.find(l=>l.id===logId);
+  if(!log) return;
+  log.reacts = log.reacts || {};
+  log.reacts[emo] = log.reacts[emo] || [];
+  const arr = log.reacts[emo];
+  const idx = arr.indexOf(byPlayerId);
+  if(idx>=0) arr.splice(idx,1);
+  else arr.push(byPlayerId);
+}
+
+/** =========================
+ *  Stage 2: mistake deck (non-repeating)
+ *  ========================= */
+function getStage1MistakeItems(){
+  return (GAME.logs||[])
+    .filter(l=>l.stage==="s1" && l.kind==="s1" && (l.fields?.smallMistake||"").trim().length>0)
+    .map(l=>({
+      fromPlayerId: l.playerId,
+      fromPlayerName: l.playerName,
+      text: (l.fields.smallMistake||"").trim(),
+      sourceLogId: l.id
+    }));
+}
+
+function buildStage2MistakeDeckIfNeeded(force=false){
+  const items = getStage1MistakeItems();
+  const need = items.length;
+  if(need===0){
+    GAME.stage2.mistakeDeck = [];
+    GAME.stage2.pointer = 0;
+    GAME.stage2.current = null;
+    return;
+  }
+  const deckOk =
+    Array.isArray(GAME.stage2.mistakeDeck) &&
+    GAME.stage2.mistakeDeck.length === need;
+
+  if(!deckOk || force){
+    GAME.stage2.mistakeDeck = shuffle(items);
+    GAME.stage2.pointer = 0;
+    GAME.stage2.current = null;
+  }
+}
+
+function drawMistakeNonRepeat(){
+  buildStage2MistakeDeckIfNeeded(false);
+  const deck = GAME.stage2.mistakeDeck || [];
+  if(deck.length===0) return null;
+
+  const idx = GAME.stage2.pointer || 0;
+  if(idx >= deck.length) return null;
+  const pick = deck[idx];
+  GAME.stage2.pointer = idx + 1;
+  return pick;
+}
+function ensureStage2Mistake(){
+  if(GAME.stage2.current) return GAME.stage2.current;
+  const a = drawMistakeNonRepeat();
+  GAME.stage2.current = a;
+  return a;
+}
+
+/** =========================
+ *  Stage 3: cause pool, each cause max 2 times
+ *  ========================= */
+function getStage2Causes(){
+  return (GAME.logs||[])
+    .filter(l=>l.stage==="s2" && l.kind==="s2" && (l.fields?.cause||"").trim().length>0)
+    .map(l=>({ text:(l.fields.cause||"").trim(), sourceLogId:l.id }));
+}
+
+function initStage3UsageIfNeeded(force=false){
+  GAME.stage3 = GAME.stage3 || {};
+  if(force || !GAME.stage3.usage){
+    GAME.stage3.usage = {};
+    GAME.stage3.capPerCause = GAME.stage3.capPerCause || 2;
+    GAME.stage3.current = null;
+  }
+}
+
+function drawCauseMaxTwice(){
+  initStage3UsageIfNeeded(false);
+  const pool = getStage2Causes();
+  if(pool.length===0) return null;
+
+  const usage = GAME.stage3.usage || {};
+  const cap = GAME.stage3.capPerCause || 2;
+
+  const eligible = pool.filter(x => (usage[x.sourceLogId]||0) < cap);
+
+  // 正常情況：還有可抽的
+  if(eligible.length){
+    const pick = eligible[Math.floor(Math.random()*eligible.length)];
+    usage[pick.sourceLogId] = (usage[pick.sourceLogId]||0) + 1;
+    GAME.stage3.usage = usage;
+    return pick;
+  }
+
+  // 極端情況：全部都達到2次（避免卡死，放寬一次，但會提示）
+  const pick = pool[Math.floor(Math.random()*pool.length)];
+  toast("⚠️ 所有原因已達2次上限（暫時放寬抽取以避免卡住）");
+  return pick;
+}
+
+function ensureStage3Cause(){
+  if(GAME.stage3.current) return GAME.stage3.current;
+  const c = drawCauseMaxTwice();
+  GAME.stage3.current = c;
+  return c;
+}
+
+/** =========================
+ *  Voting data
+ *  ========================= */
+function getStage3Ideas(){
+  // Stage3 submission log itself is the ideaId; include causePrompt so Stage4可顯示原因+點子
+  return (GAME.logs||[])
+    .filter(l=>l.stage==="s3" && l.kind==="s3" && (l.fields?.idea||"").trim().length>0)
+    .map(l=>({
+      ideaId: l.id,
+      text:(l.fields.idea||"").trim(),
+      causeText:(l.fields.causePrompt||"").trim(),
+      fromPlayerName:l.playerName
+    }));
+}
+
+function initVoteIfNeeded(force=false){
+  if(force){
+    GAME.vote = GAME.vote || { coinsPerPlayer: 7, donePlayerIds: [], allocations:{} };
+    GAME.vote.coinsPerPlayer = 7;
+    GAME.vote.donePlayerIds = [];
+    GAME.vote.allocations = {};
+    return;
+  }
+  if(!GAME.vote) GAME.vote = { coinsPerPlayer: 7, donePlayerIds: [], allocations:{} };
+}
+
+function voteRemainingCoins(pid){
+  const alloc = GAME.vote.allocations || {};
+  let spent = 0;
+  Object.values(alloc).forEach(v=>{
+    spent += (v.byPlayer?.[pid]||0);
+  });
+  return GAME.vote.coinsPerPlayer - spent;
+}
+
+function voteAdd(ideaId, pid, delta){
+  GAME.vote.allocations = GAME.vote.allocations || {};
+  const a = GAME.vote.allocations[ideaId] || { total:0, byPlayer:{} };
+  a.byPlayer[pid] = (a.byPlayer[pid]||0) + delta;
+  if(a.byPlayer[pid] < 0) a.byPlayer[pid] = 0;
+  a.total = Object.values(a.byPlayer).reduce((s,n)=>s+n,0);
+  GAME.vote.allocations[ideaId] = a;
+}
+
+function computeTop5(){
+  const ideas = getStage3Ideas();
+  const alloc = GAME.vote.allocations || {};
+  const scored = ideas.map(it=>{
+    const total = alloc[it.ideaId]?.total || 0;
+    return { ...it, total };
+  }).sort((a,b)=> b.total - a.total || a.ideaId.localeCompare(b.ideaId));
+  return scored.slice(0,5);
+}
+
+function allVoteDone(){
+  const ps = getPlayers();
+  const done = new Set(GAME.vote.donePlayerIds||[]);
+  return ps.length>0 && ps.every(p=>done.has(p.id));
+}
+
+/** =========================
+ *  CSV Export: UTF-16LE + BOM (Excel safe)
+ *  ========================= */
+function csvEscape(v){
+  const s = (v ?? "").toString();
+  if(/[,"\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
+  return s;
+}
+function formatDate(ts){
+  try{ return new Date(ts).toISOString(); }catch{ return ""; }
+}
+
+function encodeUTF16LE(str){
+  // returns Uint8Array with UTF-16LE bytes (no BOM here)
+  const buf = new Uint8Array(str.length * 2);
+  for(let i=0;i<str.length;i++){
+    const code = str.charCodeAt(i);
+    buf[i*2] = code & 0xFF;         // low byte
+    buf[i*2+1] = (code >> 8) & 0xFF; // high byte
+  }
+  return buf;
+}
+
+function exportCSV(){
+  const ps = getPlayers();
+  const top5 = computeTop5();
+  const contracts = GAME.stage4.contracts || [];
+
+  const rows = [];
+
+  rows.push([
+    "type","ts","stage","round","player",
+    "s1_success",`s1_${WORD_SMALL_MISTAKE}`,"s1_card_answer","s1_card_title","s1_card_text","s1_card_icon",
+    `s2_${WORD_SMALL_MISTAKE}_prompt`,"s2_cause",
+    "s3_cause_prompt","s3_idea",
+    "vote_idea_id","vote_idea_cause","vote_idea_text","vote_total",
+    "contract_cause","contract_idea","contract_can_do","contract_help",
+    "react_👍","react_😂","react_😭","react_🔥","react_🫶"
+  ]);
+
+  (GAME.logs||[]).forEach(l=>{
+    const f = l.fields || {};
+    rows.push([
+      "log",
+      formatDate(l.ts),
+      l.stage,
+      l.round,
+      l.playerName,
+
+      f.success||"",
+      f.smallMistake||"",
+      f.cardAnswer||"",
+      f.cardTitle||"",
+      f.cardText||"",
+      f.cardIcon||"",
+
+      f.smallMistakePrompt||"",
+      f.cause||"",
+
+      f.causePrompt||"",
+      f.idea||"",
+
+      "", "", "", "",
+
+      f.contractCause||"",
+      f.contractIdea||"",
+      f.contractCanDo||"",
+      f.contractHelp||"",
+
+      (l.reacts?.["👍"]||[]).length,
+      (l.reacts?.["😂"]||[]).length,
+      (l.reacts?.["😭"]||[]).length,
+      (l.reacts?.["🔥"]||[]).length,
+      (l.reacts?.["🫶"]||[]).length,
+    ]);
+  });
+
+  rows.push([]);
+  rows.push(["type","idea_id","cause","idea_text","from_player","votes_total"]);
+  top5.forEach(x=>{
+    rows.push(["top5", x.ideaId, x.causeText, x.text, x.fromPlayerName, x.total]);
+  });
+
+  rows.push([]);
+  rows.push(["type","voter","idea_id","votes"]);
+  const alloc = GAME.vote.allocations || {};
+  ps.forEach(p=>{
+    Object.entries(alloc).forEach(([ideaId,val])=>{
+      const n = val.byPlayer?.[p.id] || 0;
+      if(n>0) rows.push(["vote", p.name, ideaId, n]);
+    });
+  });
+
+  rows.push([]);
+  rows.push(["type","ts","player","cause","idea","can_do","help"]);
+  contracts.forEach(c=>{
+    rows.push(["contract", formatDate(c.ts), (getPlayer(c.playerId)?.name||""), c.causeText||"", c.ideaText||"", c.canDo||"", c.help||""]);
+  });
+
+  rows.push([]);
+  rows.push(["type","player","growth_stones"]);
+  ps.forEach(p=> rows.push(["player", p.name, p.growth||0]));
+
+  const csv = rows.map(r=>r.map(csvEscape).join(",")).join("\n");
+
+  // ✅ UTF-16LE BOM for Excel
+  const bom = new Uint8Array([0xFF, 0xFE]);
+  const data = encodeUTF16LE(csv);
+  const blob = new Blob([bom, data], {type:"text/csv;charset=utf-16le"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `tsh_debrief_${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  toast("📤 已匯出 CSV（Excel 不亂碼）");
+}
+
+/** Reset **/
+function hardReset(){
+  if(!confirm("確定要重置本局？（玩家名單、紀錄、投票、契約都清空；卡片庫保留）")) return;
+  GAME = newGame();
+  saveGame();
+  toast("已重置本局");
+  render();
+}
+
+/** =========================
+ *  UI Render
+ *  ========================= */
+const mainPanel = $("#mainPanel");
+const sidePanel = $("#sidePanel");
+
+function render(){
+  setAccent(GAME.meta.accent);
+  saveGame();
+
+  if(GAME.stage==="lobby"){
+    setModeBadge("Lobby");
+    renderLobby();
+    renderSide();
+  }else if(GAME.stage==="s1"){
+    setModeBadge("Stage 1");
+    renderStage1();
+    renderSide();
+  }else if(GAME.stage==="s2"){
+    setModeBadge("Stage 2");
+    renderStage2();
+    renderSide();
+  }else if(GAME.stage==="s3"){
+    setModeBadge("Stage 3");
+    renderStage3();
+    renderSide(true);
+  }else if(GAME.stage==="vote"){
+    setModeBadge("Vote");
+    renderVote();
+    renderSide(true);
+  }else if(GAME.stage==="s4"){
+    setModeBadge("Stage 4");
+    renderStage4();
+    renderSide(true);
+  }else if(GAME.stage==="done"){
+    setModeBadge("Done");
+    renderDone();
+    renderSide(true);
+  }
+}
+
+/** Side panel: players + card editor + logs wall **/
+function renderSide(showStrategyInfo=false){
+  const ps = getPlayers();
+  const cur = currentPlayer();
+
+  const headerRow = `
+    <div class="row" style="justify-content:space-between; align-items:center">
+      <div>
+        <div style="font-weight:900">玩家資源（成長石）</div>
+        <div class="hint">每次提交 +1｜花 1 顆重抽卡｜花 2 顆跳過</div>
+      </div>
+      <span class="pill">${ps.length} 人</span>
+    </div>
+  `;
+
+  const strategyHint = showStrategyInfo ? `
+    <div style="height:10px"></div>
+    <div class="lockBanner">
+      🎯 策略提示：Stage3 同一個「原因」最多抽到 2 次（全局）。<br/>
+      讓點子分布更平均，不會一直卡同一個根因。
+    </div>
+  ` : "";
+
+  sidePanel.innerHTML = `
+    ${headerRow}
+    <div style="height:10px"></div>
+
+    <details open>
+      <summary>👥 玩家名單（點擊收合） <span class="pill">${ps.length}</span></summary>
+      <div style="height:10px"></div>
+      <div class="row">
+        <input class="input" id="newPlayer" placeholder="輸入玩家名字…" />
+        <button class="btn small primary" id="btnAddPlayer">➕ 加入</button>
+      </div>
+      <div class="hint" style="margin-top:8px">建議 3–8 人；單機輪流操作。</div>
+      <div style="height:10px"></div>
+      <div class="row">
+        <button class="btn small" id="btnShuffleOrder">🔀 隨機順序（固定本局）</button>
+        <button class="btn small danger" id="btnClearPlayers">清空玩家</button>
+      </div>
+      <div class="hr"></div>
+      <div id="playersBox" class="row" style="flex-direction:column; gap:10px"></div>
+    </details>
+
+    <div style="height:12px"></div>
+    <details>
+      <summary>🎴 事件卡庫（新增/編輯｜點擊收合） <span class="pill">${LIB.length}</span></summary>
+      <div class="hint" style="margin-top:8px">只做「新增＋刪除」＋快速預覽，避免編輯器地獄。</div>
+      <div style="height:10px"></div>
+
+      <div class="two">
+        <div>
+          <label class="hint">卡片標題</label>
+          <input class="input" id="cardTitle" placeholder="例：宣傳啟動" />
+        </div>
+        <div>
+          <label class="hint">Icon（可空）</label>
+          <input class="input" id="cardIcon" placeholder="例：📣" />
+        </div>
+      </div>
+      <div style="height:8px"></div>
+      <label class="hint">卡片問題</label>
+      <textarea id="cardText" maxlength="160" placeholder="例：你們是怎麼開展的？反應如何？"></textarea>
+
+      <div style="height:10px"></div>
+      <div class="row" style="justify-content:flex-end">
+        <button class="btn small primary" id="btnAddCard">➕ 新增卡片</button>
+      </div>
+
+      <div class="hr"></div>
+      <div id="cardList" style="display:flex; flex-direction:column; gap:10px"></div>
+    </details>
+
+    ${strategyHint}
+
+    <div style="height:12px"></div>
+    <details open>
+      <summary>🧱 紀錄牆（全部提交） <span class="pill">${(GAME.logs||[]).length}</span></summary>
+      <div class="hint" style="margin-top:8px">點表情可加/可收回（以「目前輪到的玩家」身分）。</div>
+      <div style="height:10px"></div>
+      <div id="logsBox"></div>
+    </details>
+  `;
+
+  // players list
+  const pb = $("#playersBox");
+  pb.innerHTML = ps.map((p,i)=>`
+    <div class="listItem" style="align-items:center; ${cur && p.id===cur.id ? "border-color:rgba(255,107,155,.45); box-shadow:0 10px 20px rgba(255,107,155,.10);" : ""}">
+      <div class="row" style="gap:10px">
+        <div class="miniIcon">${escapeHtml(p.name.slice(0,1))}</div>
+        <div>
+          <div style="font-weight:900">${escapeHtml(p.name)} ${cur && p.id===cur.id ? "<span class='pill accent'>目前輪到</span>" : ""}</div>
+          <div class="hint">🪨 成長石：<b>${p.growth||0}</b></div>
+        </div>
+      </div>
+      <div class="row" style="justify-content:flex-end">
+        <button class="btn tiny" data-act="up" data-i="${i}">⬆️</button>
+        <button class="btn tiny" data-act="down" data-i="${i}">⬇️</button>
+        <button class="btn tiny" data-act="rm" data-i="${i}">移除</button>
+      </div>
+    </div>
+  `).join("");
+
+  pb.querySelectorAll("button[data-act]").forEach(b=>{
+    b.onclick = ()=>{
+      const act = b.dataset.act;
+      const i = Number(b.dataset.i);
+      if(act==="rm"){
+        if(!confirm("移除玩家？")) return;
+        GAME.meta.players.splice(i,1);
+        if(GAME.turn.playerIndex >= GAME.meta.players.length) GAME.turn.playerIndex = 0;
+      }else if(act==="up" && i>0){
+        [GAME.meta.players[i-1], GAME.meta.players[i]] = [GAME.meta.players[i], GAME.meta.players[i-1]];
+      }else if(act==="down" && i < GAME.meta.players.length-1){
+        [GAME.meta.players[i+1], GAME.meta.players[i]] = [GAME.meta.players[i], GAME.meta.players[i+1]];
+      }
+      render();
+    };
+  });
+
+  // add player
+  $("#btnAddPlayer").onclick = ()=>{
+    const name = ($("#newPlayer").value||"").trim();
+    if(!name) return toast("請輸入名字");
+    if(getPlayers().length>=8) return toast("最多 8 人");
+    GAME.meta.players.push({id:uid(), name, growth:0});
+    $("#newPlayer").value="";
+    render();
+  };
+
+  // shuffle
+  $("#btnShuffleOrder").onclick = ()=>{
+    if(getPlayers().length<2) return toast("至少2人才需要洗牌");
+    GAME.meta.players = shuffle(GAME.meta.players);
+    GAME.turn.playerIndex = 0;
+    toast("已隨機順序（本局固定）");
+    render();
+  };
+
+  // clear players
+  $("#btnClearPlayers").onclick = ()=>{
+    if(!confirm("清空玩家名單？（會影響本局流程與投票）")) return;
+    GAME.meta.players = [];
+    GAME.turn.playerIndex = 0;
+    render();
+  };
+
+  /** Card library UI **/
+  const cl = $("#cardList");
+  cl.innerHTML = LIB.map((c,idx)=>`
+    <div class="listItem" style="align-items:center">
+      <div style="min-width:0">
+        <div style="font-weight:900; display:flex; gap:8px; align-items:center">
+          <span>${escapeHtml(c.icon || "🎴")}</span>
+          <span>${escapeHtml(c.title || "（無標題）")}</span>
+        </div>
+        <div class="hint" style="margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+          ${escapeHtml(c.text || "")}
+        </div>
+      </div>
+      <div class="row" style="justify-content:flex-end">
+        <button class="btn tiny danger" data-card-rm="${idx}">刪除</button>
+      </div>
+    </div>
+  `).join("") || `<div class="hint">（目前沒有卡片）</div>`;
+
+  cl.querySelectorAll("button[data-card-rm]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const idx = Number(btn.dataset.cardRm);
+      if(!confirm("刪除這張卡片？")) return;
+      const removed = LIB.splice(idx,1);
+      saveLibrary();
+      toast(`已刪除：${removed?.[0]?.title || "卡片"}`);
+      // 若正在抽這張卡，避免卡住
+      if(GAME.currentCard && removed[0] && GAME.currentCard.id === removed[0].id){
+        GAME.currentCard = null;
+      }
+      render();
+    };
+  });
+
+  $("#btnAddCard").onclick = ()=>{
+    const title = ($("#cardTitle").value||"").trim();
+    const text = ($("#cardText").value||"").trim();
+    const icon = ($("#cardIcon").value||"").trim();
+    if(!title || !text) return toast("請至少填卡片標題＋卡片問題");
+    LIB.unshift({id:uid(), title, text, icon});
+    saveLibrary();
+    $("#cardTitle").value = "";
+    $("#cardText").value = "";
+    $("#cardIcon").value = "";
+    toast("已新增卡片");
+    render();
+  };
+
+  // logs wall
+  $("#logsBox").innerHTML = renderLogsWall();
+
+  // bind emoji toggles
+  $("#logsBox").querySelectorAll("[data-log][data-emo]").forEach(el=>{
+    el.onclick = ()=>{
+      const logId = el.dataset.log;
+      const emo = el.dataset.emo;
+      const curP = currentPlayer() || getPlayers()[0];
+      if(!curP) return toast("請先建立玩家名單");
+      toggleReact(logId, emo, curP.id);
+      render();
+    };
+  });
+}
+
+/** Logs wall **/
+function renderLogsWall(){
+  const logs = GAME.logs || [];
+  if(logs.length===0) return `<div class="hint">（尚無任何提交）</div>`;
+
+  const stageOrder = ["s1","s2","s3","vote","s4","done"];
+  const groups = {};
+  logs.forEach(l=>{
+    const k = `${l.stage}::${l.round}`;
+    groups[k] = groups[k] || [];
+    groups[k].push(l);
+  });
+
+  const keys = Object.keys(groups).sort((a,b)=>{
+    const [sa,ra] = a.split("::");
+    const [sb,rb] = b.split("::");
+    const ia = stageOrder.indexOf(sa);
+    const ib = stageOrder.indexOf(sb);
+    if(ia!==ib) return ia-ib;
+    return Number(ra)-Number(rb);
+  });
+
+  return keys.map(k=>{
+    const [st, rd] = k.split("::");
+    const title = `${stageName(st)}｜第 ${rd} 輪`;
+    const items = groups[k].sort((x,y)=>x.ts-y.ts).map(l=>{
+      const f = l.fields||{};
+      let body = "";
+      if(l.stage==="s1"){
+        body = `
+          <div class="tagRow"><span class="pill ok">✅ 成功</span><span class="hint">${escapeHtml(f.success||"")}</span></div>
+          <div class="tagRow"><span class="pill danger">🧩 ${WORD_SMALL_MISTAKE}</span><span class="hint">${escapeHtml(f.smallMistake||"")}</span></div>
+          <div class="tagRow"><span class="pill accent">🎴 卡片回答</span><span class="hint">${escapeHtml(f.cardAnswer||"")}</span></div>
+          <div class="hint" style="margin-top:8px">
+            <b>抽到卡：</b>${escapeHtml(f.cardIcon||"🎴")} ${escapeHtml(f.cardTitle||"")}<br/>
+            <span class="hint">${escapeHtml(f.cardText||"")}</span>
+          </div>
+        `;
+      }else if(l.stage==="s2"){
+        body = `
+          <div class="hint"><b>${WORD_SMALL_MISTAKE}：</b>${escapeHtml(f.smallMistakePrompt||"")}</div>
+          <div class="hint"><b>為什麼會發生：</b>${escapeHtml(f.cause||"")}</div>
+        `;
+      }else if(l.stage==="s3"){
+        body = `
+          <div class="hint"><b>原因：</b>${escapeHtml(f.causePrompt||"")}</div>
+          <div class="hint"><b>點子：</b>${escapeHtml(f.idea||"")}</div>
+        `;
+      }else if(l.kind==="contract"){
+        body = `
+          <div class="hint"><b>原因：</b>${escapeHtml(f.contractCause||"")}</div>
+          <div class="hint"><b>點子：</b>${escapeHtml(f.contractIdea||"")}</div>
+          <div class="hint"><b>我可以做什麼：</b>${escapeHtml(f.contractCanDo||"")}</div>
+          <div class="hint"><b>需要協助：</b>${escapeHtml(f.contractHelp||"")}</div>
+        `;
+      }
+
+      const reacts = REACT_EMOS.map(e=>{
+        const n = (l.reacts?.[e]||[]).length;
+        return `<span class="tag" data-log="${l.id}" data-emo="${e}">${e} ${n}</span>`;
+      }).join("");
+
+      return `
+        <div class="card" style="margin:10px 0">
+          <div class="head">
+            <div class="title">
+              <div class="icon">🧾</div>
+              <div>
+                <div style="font-weight:900">${escapeHtml(l.playerName)}</div>
+                <div class="hint">${new Date(l.ts).toLocaleString()}</div>
+              </div>
+            </div>
+            <span class="pill">${escapeHtml(l.kind||"")}</span>
+          </div>
+          <div class="body">
+            ${body}
+            <div class="tagRow" style="margin-top:10px">${reacts}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    return `
+      <div class="lockBanner" style="margin:10px 0">${escapeHtml(title)}</div>
+      ${items}
+    `;
+  }).join("");
+}
+
+/** =========================
+ *  Lobby
+ *  ========================= */
+function renderLobby(){
+  mainPanel.innerHTML = `
+    <h2 style="margin:0 0 8px">建立一局（四階段按順序＋投票）</h2>
+    <div class="hint">
+      Stage1：成功＋${WORD_SMALL_MISTAKE}＋回答事件卡問題（+1🪨）｜2輪<br/>
+      Stage2：從所有${WORD_SMALL_MISTAKE}隨機抽（不重複）→ 填「為什麼會發生」（+1🪨）｜2輪<br/>
+      Stage3：從所有原因隨機抽（每個原因最多2次）→ 寫點子（+1🪨）｜2輪<br/>
+      投票：每人 7 枚資源幣 → TOP5 點子<br/>
+      Stage4：每人選 TOP5 之一填契約（顯示原因+點子；不需期限）→ 結束詢問匯出 CSV
+    </div>
+    <div class="hr"></div>
+
+    <label class="hint">房間標題</label>
+    <input class="input" id="roomTitle" value="${escapeHtml(GAME.meta.roomTitle)}" />
+
+    <div style="height:10px"></div>
+    <label class="hint">主色 Accent</label>
+    <input class="input" id="roomAccent" value="${escapeHtml(GAME.meta.accent)}" />
+
+    <div style="height:12px"></div>
+    <div class="lockBanner">
+      🎲 提醒：右側先加入玩家（3–8 人）再開始。<br/>
+      全程自動保存，可隨時關掉再打開繼續。
+    </div>
+
+    <div style="height:12px"></div>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn primary" id="btnStart">▶️ 開始 Stage 1</button>
+    </div>
+  `;
+
+  $("#roomTitle").oninput = e=>{ GAME.meta.roomTitle = e.target.value; render(); };
+  $("#roomAccent").oninput = e=>{ GAME.meta.accent = e.target.value; render(); };
+
+  $("#btnStart").onclick = ()=>{
+    const n = getPlayers().length;
+    if(n<3 || n>8) return toast("玩家需 3–8 人（先在右側加入玩家）");
+    goStage("s1");
+    toast("開始 Stage 1（第1輪）");
+    render();
+  };
+}
+
+/** =========================
+ *  Stage 1
+ *  ========================= */
+function renderStage1(){
+  const ps = getPlayers();
+  const p = currentPlayer();
+  if(!p){ goStage("lobby"); return render(); }
+
+  const card = ensureEventCard();
+  if(!card) return mainPanel.innerHTML = `<div class="hint">事件卡庫為空（右側可新增卡片）</div>`;
+
+  mainPanel.innerHTML = `
+    <h2 style="margin:0 0 6px">第1階段｜事件回顧 What Happened?</h2>
+    <div class="hint">固定兩輪：目前 <b>第 ${GAME.turn.stageRound} / 2 輪</b>。提交一次 = +1 成長石。</div>
+    <div class="hr"></div>
+
+    <div class="row" style="justify-content:space-between">
+      <div class="chip ok">輪到：<b>${escapeHtml(p.name)}</b>（${GAME.turn.playerIndex+1}/${ps.length}）</div>
+      <div class="chip warn">輪數：第 <b>${GAME.turn.stageRound}</b> 輪</div>
+    </div>
+
+    <div style="height:10px"></div>
+    <div class="card">
+      <div class="head">
+        <div class="title">
+          <div class="icon">${escapeHtml(card.icon || "🎴")}</div>
+          <div>
+            <div style="font-weight:900">${escapeHtml(card.title)}</div>
+            <div class="hint">${escapeHtml(card.text)}</div>
+          </div>
+        </div>
+        <span class="pill accent">事件卡問題</span>
+      </div>
+      <div class="body">
+        <div class="bigQ">${escapeHtml(card.text)}</div>
+        <div class="sub">本階段需要填：成功、${WORD_SMALL_MISTAKE}、以及卡片問題回答（會記錄你抽到哪張卡）。</div>
+      </div>
+    </div>
+
+    <div style="height:10px"></div>
+    <div class="two">
+      <div>
+        <label class="hint">✅ 最成功（關鍵字即可）</label>
+        <textarea id="s1Success" maxlength="140" placeholder="例：宣傳貼文被轉發、報名瞬間滿…"></textarea>
+      </div>
+      <div>
+        <label class="hint">🧩 ${WORD_SMALL_MISTAKE}（關鍵字即可）</label>
+        <textarea id="s1Mistake" maxlength="140" placeholder="例：物資少帶、時間估錯、冷場…"></textarea>
+      </div>
+    </div>
+
+    <div style="height:10px"></div>
+    <label class="hint">🎴 回答卡片問題（最多160字）</label>
+    <textarea id="s1CardAnswer" maxlength="160" placeholder="針對上方事件卡題目回答…"></textarea>
+
+    <div style="height:10px"></div>
+    <div class="row" style="justify-content:space-between">
+      <div class="hint">
+        成長石：<b>${p.growth||0}</b>｜
+        <span class="kbd">花 1</span> 重抽事件卡｜
+        <span class="kbd">花 2</span> 跳過本回合（下一位）
+      </div>
+      <div class="row">
+        <button class="btn small" id="btnRedraw">🪨-1 重抽</button>
+        <button class="btn small danger" id="btnSkip">🪨-2 跳過</button>
+        <button class="btn small primary" id="btnSubmit">提交（+1🪨）</button>
+      </div>
+    </div>
+  `;
+
+  $("#btnRedraw").onclick = ()=>{
+    if(!spendGrowth(p.id, 1)) return toast("成長石不足（需要 1 顆）");
+    GAME.currentCard = null;
+    toast("已重抽事件卡");
+    render();
+  };
+
+  $("#btnSkip").onclick = ()=>{
+    if(!spendGrowth(p.id, 2)) return toast("成長石不足（需要 2 顆）");
+    GAME.currentCard = null;
+    toast("已跳過（換下一位）");
+    nextTurnOrStage();
+    render();
+  };
+
+  $("#btnSubmit").onclick = ()=>{
+    const success = ($("#s1Success").value||"").trim();
+    const smallMistake = ($("#s1Mistake").value||"").trim();
+    const cardAnswer = ($("#s1CardAnswer").value||"").trim();
+    if(!success || !smallMistake || !cardAnswer) return toast(`成功、${WORD_SMALL_MISTAKE}、卡片回答都要填`);
+
+    addLog({
+      playerId: p.id,
+      playerName: p.name,
+      kind: "s1",
+      prompt: card.text,
+      fields: {
+        success,
+        smallMistake,
+        cardAnswer,
+        // ✅ 記錄抽到什麼卡（不顯示 cardId）
+        cardTitle: card.title,
+        cardText: card.text,
+        cardIcon: card.icon || ""
+      },
+      reacts: {}
+    });
+
+    addGrowth(p.id, 1);
+    toast("已提交：+1 成長石");
+    GAME.currentCard = null;
+
+    nextTurnOrStage();
+
+    if(GAME.stage==="s2") buildStage2MistakeDeckIfNeeded(true);
+
+    render();
+  };
+}
+
+/** =========================
+ *  Stage 2
+ *  ========================= */
+function renderStage2(){
+  const ps = getPlayers();
+  const p = currentPlayer();
+  if(!p){ goStage("lobby"); return render(); }
+
+  buildStage2MistakeDeckIfNeeded(false);
+  const mistakeItem = ensureStage2Mistake();
+
+  if(!mistakeItem){
+    mainPanel.innerHTML = `
+      <h2 style="margin:0 0 6px">第2階段｜問題挖掘 Why It Happened?</h2>
+      <div class="lockBanner">找不到 Stage1 的${WORD_SMALL_MISTAKE}紀錄。請回到 Stage1 完成提交後再進入 Stage2。</div>
+      <div style="height:10px"></div>
+      <button class="btn" onclick="goStage('s1'); render();">⬅️ 回 Stage 1</button>
+    `;
+    return;
+  }
+
+  mainPanel.innerHTML = `
+    <h2 style="margin:0 0 6px">第2階段｜問題挖掘 Why It Happened?</h2>
+    <div class="hint">
+      固定兩輪：目前 <b>第 ${GAME.turn.stageRound} / 2 輪</b>。<br/>
+      本階段每回合從「所有${WORD_SMALL_MISTAKE}」隨機抽一個（不重複），玩家回答為什麼會發生（+1🪨）。
+    </div>
+    <div class="hr"></div>
+
+    <div class="row" style="justify-content:space-between">
+      <div class="chip ok">輪到：<b>${escapeHtml(p.name)}</b>（${GAME.turn.playerIndex+1}/${ps.length}）</div>
+      <div class="chip warn">輪數：第 <b>${GAME.turn.stageRound}</b> 輪</div>
+    </div>
+
+    <div style="height:10px"></div>
+    <div class="card">
+      <div class="head">
+        <div class="title">
+          <div class="icon">🧩</div>
+          <div>
+            <div style="font-weight:900">抽到的${WORD_SMALL_MISTAKE}（不重複）</div>
+            <div class="hint">來源：${escapeHtml(mistakeItem.fromPlayerName)}（Stage1）</div>
+          </div>
+        </div>
+        <span class="pill danger">${WORD_SMALL_MISTAKE}</span>
+      </div>
+      <div class="body">
+        <div class="bigQ">${escapeHtml(mistakeItem.text)}</div>
+        <div class="sub">請回答：為什麼會發生？（根本原因）</div>
+      </div>
+    </div>
+
+    <div style="height:10px"></div>
+    <label class="hint">為什麼會發生（最多160字）</label>
+    <textarea id="s2Cause" maxlength="160" placeholder="例：資訊沒對齊、備援不足、流程不清、責任不明…"></textarea>
+
+    <div style="height:10px"></div>
+    <div class="row" style="justify-content:space-between">
+      <div class="hint">
+        成長石：<b>${p.growth||0}</b>｜
+        <span class="kbd">花 2</span> 跳過本回合（下一位）
+      </div>
+      <div class="row">
+        <button class="btn small danger" id="btnSkip">🪨-2 跳過</button>
+        <button class="btn small primary" id="btnSubmit">提交（+1🪨）</button>
+      </div>
+    </div>
+  `;
+
+  $("#btnSkip").onclick = ()=>{
+    if(!spendGrowth(p.id, 2)) return toast("成長石不足（需要 2 顆）");
+    GAME.stage2.current = null;
+    toast("已跳過（換下一位）");
+    nextTurnOrStage();
+    render();
+  };
+
+  $("#btnSubmit").onclick = ()=>{
+    const cause = ($("#s2Cause").value||"").trim();
+    if(!cause) return toast("請輸入原因");
+
+    addLog({
+      playerId: p.id,
+      playerName: p.name,
+      kind: "s2",
+      prompt: mistakeItem.text,
+      fields: {
+        smallMistakePrompt: mistakeItem.text,
+        smallMistakeFrom: mistakeItem.fromPlayerName,
+        smallMistakeSourceLogId: mistakeItem.sourceLogId,
+        cause
+      },
+      reacts: {}
+    });
+
+    addGrowth(p.id, 1);
+    toast("已提交：+1 成長石");
+
+    GAME.stage2.current = null;
+    nextTurnOrStage();
+
+    if(GAME.stage==="s3") initStage3UsageIfNeeded(true);
+
+    render();
+  };
+}
+
+/** =========================
+ *  Stage 3
+ *  ========================= */
+function renderStage3(){
+  const ps = getPlayers();
+  const p = currentPlayer();
+  if(!p){ goStage("lobby"); return render(); }
+
+  initStage3UsageIfNeeded(false);
+  const causeItem = ensureStage3Cause();
+  if(!causeItem){
+    mainPanel.innerHTML = `
+      <h2 style="margin:0 0 6px">第3階段｜點子生成 What Can We Do Better?</h2>
+      <div class="lockBanner">找不到 Stage2 的原因紀錄。請先完成 Stage2 的提交。</div>
+      <div style="height:10px"></div>
+      <button class="btn" onclick="goStage('s2'); render();">⬅️ 回 Stage 2</button>
+    `;
+    return;
+  }
+
+  const usedCount = (GAME.stage3.usage?.[causeItem.sourceLogId] || 0);
+  const cap = GAME.stage3.capPerCause || 2;
+
+  mainPanel.innerHTML = `
+    <h2 style="margin:0 0 6px">第3階段｜點子生成 What Can We Do Better?</h2>
+    <div class="hint">
+      固定兩輪：目前 <b>第 ${GAME.turn.stageRound} / 2 輪</b>。<br/>
+      本階段每回合從「所有原因」隨機抽一個（同一原因最多出現 2 次），玩家提出點子（+1🪨）。
+    </div>
+    <div class="hr"></div>
+
+    <div class="row" style="justify-content:space-between">
+      <div class="chip ok">輪到：<b>${escapeHtml(p.name)}</b>（${GAME.turn.playerIndex+1}/${ps.length}）</div>
+      <div class="chip warn">輪數：第 <b>${GAME.turn.stageRound}</b> 輪</div>
+    </div>
+
+    <div style="height:10px"></div>
+    <div class="card">
+      <div class="head">
+        <div class="title">
+          <div class="icon">🔍</div>
+          <div>
+            <div style="font-weight:900">抽到的原因（最多 2 次）</div>
+            <div class="hint">目前此原因已出現：<b>${usedCount}</b> / ${cap}</div>
+          </div>
+        </div>
+        <span class="pill warn">Cause</span>
+      </div>
+      <div class="body">
+        <div class="bigQ">${escapeHtml(causeItem.text)}</div>
+        <div class="sub">請提出一個你們可以做得更好的點子（可落地）</div>
+      </div>
+    </div>
+
+    <div style="height:10px"></div>
+    <label class="hint">你的點子（最多180字）</label>
+    <textarea id="s3Idea" maxlength="180" placeholder="例：建立檢核表、雙人確認、預演流程、固定訊息模板…"></textarea>
+
+    <div style="height:10px"></div>
+    <div class="row" style="justify-content:space-between">
+      <div class="hint">
+        成長石：<b>${p.growth||0}</b>｜
+        <span class="kbd">花 2</span> 跳過本回合（下一位）
+      </div>
+      <div class="row">
+        <button class="btn small danger" id="btnSkip">🪨-2 跳過</button>
+        <button class="btn small primary" id="btnSubmit">提交（+1🪨）</button>
+      </div>
+    </div>
+  `;
+
+  $("#btnSkip").onclick = ()=>{
+    if(!spendGrowth(p.id, 2)) return toast("成長石不足（需要 2 顆）");
+    GAME.stage3.current = null;
+    toast("已跳過（換下一位）");
+    nextTurnOrStage();
+    render();
+  };
+
+  $("#btnSubmit").onclick = ()=>{
+    const idea = ($("#s3Idea").value||"").trim();
+    if(!idea) return toast("請輸入點子");
+
+    addLog({
+      playerId: p.id,
+      playerName: p.name,
+      kind: "s3",
+      prompt: causeItem.text,
+      fields: {
+        causePrompt: causeItem.text,
+        causeSourceLogId: causeItem.sourceLogId,
+        idea
+      },
+      reacts: {}
+    });
+
+    addGrowth(p.id, 1);
+    toast("已提交：+1 成長石");
+
+    GAME.stage3.current = null;
+    nextTurnOrStage();
+
+    if(GAME.stage==="vote") initVoteIfNeeded(true);
+
+    render();
+  };
+}
+
+/** =========================
+ *  Vote
+ *  ========================= */
+function renderVote(){
+  const ps = getPlayers();
+  const p = currentPlayer();
+  if(!p){ goStage("lobby"); return render(); }
+
+  initVoteIfNeeded(false);
+
+  const ideas = getStage3Ideas();
+  if(ideas.length===0){
+    mainPanel.innerHTML = `
+      <h2 style="margin:0 0 6px">🪙 投票｜資源幣 TOP5</h2>
+      <div class="lockBanner">找不到 Stage3 的點子。請先完成 Stage3 提交。</div>
+      <div style="height:10px"></div>
+      <button class="btn" onclick="goStage('s3'); render();">⬅️ 回 Stage 3</button>
+    `;
+    return;
+  }
+
+  const doneSet = new Set(GAME.vote.donePlayerIds||[]);
+  const remaining = voteRemainingCoins(p.id);
+
+  const rows = ideas.map(it=>{
+    const mine = GAME.vote.allocations?.[it.ideaId]?.byPlayer?.[p.id] || 0;
+    const total = GAME.vote.allocations?.[it.ideaId]?.total || 0;
+    return `
+      <div class="voteGrid">
+        <div>
+          <div style="font-weight:900">${escapeHtml(it.text)}</div>
+          <div class="hint">原因：${escapeHtml(it.causeText || "（未記錄）")}</div>
+          <div class="hint">提出者：${escapeHtml(it.fromPlayerName)}｜總票：<b>${total}</b>｜你投：<b>${mine}</b></div>
+        </div>
+        <button class="btn tiny" data-idea="${it.ideaId}" data-act="minus">-1</button>
+        <button class="btn tiny primary" data-idea="${it.ideaId}" data-act="plus">+1</button>
+      </div>
+    `;
+  }).join("");
+
+  mainPanel.innerHTML = `
+    <h2 style="margin:0 0 6px">🪙 投票｜資源幣 TOP5</h2>
+    <div class="hint">每人 7 枚資源幣。現在輪到 <b>${escapeHtml(p.name)}</b> 投票（可加可減）。</div>
+    <div class="hr"></div>
+
+    <div class="row" style="justify-content:space-between">
+      <div class="chip ok">投票者：<b>${escapeHtml(p.name)}</b>（${GAME.turn.playerIndex+1}/${ps.length}）</div>
+      <div class="row">
+        <span class="chip warn">剩餘幣：<b>${remaining}</b> / 7</span>
+        <span class="chip ${doneSet.has(p.id) ? "ok" : "danger"}">${doneSet.has(p.id) ? "已鎖定" : "未鎖定"}</span>
+      </div>
+    </div>
+
+    <div style="height:10px"></div>
+    <div class="lockBanner">
+      規則：你可以把 7 枚分散投給多個點子。<br/>
+      當你按「鎖定我的投票」後，本人投票就完成，換下一位。
+    </div>
+
+    <div style="height:10px"></div>
+    <div style="display:flex; flex-direction:column; gap:10px">
+      ${rows}
+    </div>
+
+    <div style="height:12px"></div>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn danger" id="btnClearMine">清空我的投票</button>
+      <button class="btn primary" id="btnLock">鎖定我的投票 ➜ 下一位</button>
+    </div>
+
+    <div style="height:12px"></div>
+    <div class="hr"></div>
+    <div class="row" style="justify-content:space-between">
+      <div class="hint">全部完成後會顯示 TOP5，並進入行動契約。</div>
+      <button class="btn" id="btnShowTop5">👀 先看目前 TOP5</button>
+    </div>
+    <div id="top5Box" style="margin-top:10px"></div>
+  `;
+
+  mainPanel.querySelectorAll("button[data-idea]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const ideaId = btn.dataset.idea;
+      const act = btn.dataset.act;
+      const doneSet2 = new Set(GAME.vote.donePlayerIds||[]);
+      if(doneSet2.has(p.id)) return toast("你已鎖定投票（要修改請先清空再鎖定）");
+
+      const rem = voteRemainingCoins(p.id);
+      if(act==="plus"){
+        if(rem<=0) return toast("沒有剩餘資源幣了");
+        voteAdd(ideaId, p.id, +1);
+      }else{
+        voteAdd(ideaId, p.id, -1);
+      }
+      render();
+    };
+  });
+
+  $("#btnClearMine").onclick = ()=>{
+    const doneSet2 = new Set(GAME.vote.donePlayerIds||[]);
+    if(doneSet2.has(p.id) && !confirm("你已鎖定投票，確定要清空重投嗎？（會解除鎖定）")) return;
+
+    GAME.vote.donePlayerIds = (GAME.vote.donePlayerIds||[]).filter(x=>x!==p.id);
+
+    const alloc = GAME.vote.allocations || {};
+    Object.keys(alloc).forEach(ideaId=>{
+      if(alloc[ideaId]?.byPlayer?.[p.id]){
+        alloc[ideaId].byPlayer[p.id] = 0;
+        alloc[ideaId].total = Object.values(alloc[ideaId].byPlayer).reduce((s,n)=>s+n,0);
+      }
+    });
+    toast("已清空你的投票");
+    render();
+  };
+
+  $("#btnLock").onclick = ()=>{
+    if(voteRemainingCoins(p.id) !== 0){
+      if(!confirm("你還有剩餘資源幣，仍要鎖定嗎？")) return;
+    }
+    const done = new Set(GAME.vote.donePlayerIds||[]);
+    done.add(p.id);
+    GAME.vote.donePlayerIds = Array.from(done);
+    toast("已鎖定你的投票");
+
+    if(GAME.turn.playerIndex < ps.length-1){
+      GAME.turn.playerIndex += 1;
+      render();
+    }else{
+      if(!allVoteDone()){
+        GAME.turn.playerIndex = 0;
+        toast("仍有人未鎖定投票，回到第一位");
+        render();
+      }else{
+        const top5 = computeTop5();
+        const msg = top5.map((x,i)=>`${i+1}. 原因：${x.causeText}｜點子：${x.text}（${x.total}票）`).join("\n");
+        alert("✅ 投票完成！TOP5：\n\n" + msg);
+        goNextStage(); // to s4
+        render();
+      }
+    }
+  };
+
+  $("#btnShowTop5").onclick = ()=>{
+    const top5 = computeTop5();
+    $("#top5Box").innerHTML = `
+      <div class="lockBanner">
+        目前 TOP5（即時）：<br/>
+        ${top5.map((x,i)=> `${i+1}. 原因：${escapeHtml(x.causeText)}｜點子：${escapeHtml(x.text)}（${x.total}票）`).join("<br/>")}
+      </div>
+    `;
+  };
+}
+
+/** =========================
+ *  Stage 4 (Contracts from TOP5, show cause+idea)
+ *  ========================= */
+function renderStage4(){
+  const ps = getPlayers();
+  const p = currentPlayer();
+  if(!p){ goStage("lobby"); return render(); }
+
+  const top5 = computeTop5();
+  if(top5.length===0){
+    mainPanel.innerHTML = `
+      <h2 style="margin:0 0 6px">第4階段｜行動契約</h2>
+      <div class="lockBanner">找不到 TOP5（可能尚未完成投票）。請先完成投票。</div>
+      <div style="height:10px"></div>
+      <button class="btn" onclick="goStage('vote'); render();">⬅️ 回投票</button>
+    `;
+    return;
+  }
+
+  const existing = (GAME.stage4.contracts||[]).find(x=>x.playerId===p.id);
+  const options = top5.map(x=>{
+    const sel = existing?.ideaId===x.ideaId ? "selected" : "";
+    const label = `原因：${x.causeText}｜點子：${x.text}（${x.total}票）`;
+    return `<option value="${x.ideaId}" ${sel}>${escapeHtml(label)}</option>`;
+  }).join("");
+
+  mainPanel.innerHTML = `
+    <h2 style="margin:0 0 6px">第4階段｜行動契約 What We'll Do</h2>
+    <div class="hint">每人填一張契約卡：從 TOP5 選一個「原因+點子」，寫下你「我可以做什麼」（不需要期限）。</div>
+    <div class="hr"></div>
+
+    <div class="row" style="justify-content:space-between">
+      <div class="chip ok">輪到：<b>${escapeHtml(p.name)}</b>（${GAME.turn.playerIndex+1}/${ps.length}）</div>
+      <div class="pill warn">已完成：${(GAME.stage4.contracts||[]).length} / ${ps.length}</div>
+    </div>
+
+    <div style="height:10px"></div>
+    <div class="card">
+      <div class="head">
+        <div class="title"><div class="icon">📝</div><div>行動契約卡</div></div>
+        <span class="pill accent">TOP5 Only</span>
+      </div>
+      <div class="body">
+        <label class="hint">選擇 TOP5（原因 + 點子）</label>
+        <select class="input" id="cIdeaSelect">${options}</select>
+
+        <div style="height:10px"></div>
+        <label class="hint">我可以做什麼（最多160字）</label>
+        <textarea id="cCanDo" maxlength="160" placeholder="例：我可以把模板整理成可用版本並在群組公告">${escapeHtml(existing?.canDo||"")}</textarea>
+
+        <div style="height:10px"></div>
+        <label class="hint">需要協助（可空，最多100字）</label>
+        <textarea id="cHelp" maxlength="100" placeholder="例：需要總務協助借物/需要某組提供資料">${escapeHtml(existing?.help||"")}</textarea>
+
+        <div style="height:12px"></div>
+        <div class="row" style="justify-content:flex-end">
+          <button class="btn small primary" id="btnSaveContract">💾 儲存並下一位</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:12px"></div>
+    <div class="lockBanner">
+      完成所有人後會跳出「恭喜結束！是否匯出CSV？」（按取消也不會清除資料）。
+    </div>
+  `;
+
+  $("#btnSaveContract").onclick = ()=>{
+    const ideaId = ($("#cIdeaSelect").value||"").trim();
+    const canDo = ($("#cCanDo").value||"").trim();
+    const help = ($("#cHelp").value||"").trim();
+    if(!ideaId || !canDo) return toast("請至少選 TOP5 並填『我可以做什麼』");
+
+    const chosen = top5.find(x=>x.ideaId===ideaId);
+    const ideaText = chosen?.text || "";
+    const causeText = chosen?.causeText || "";
+
+    const obj = { playerId:p.id, ideaId, causeText, ideaText, canDo, help, ts: Date.now() };
+
+    const idx = (GAME.stage4.contracts||[]).findIndex(x=>x.playerId===p.id);
+    if(idx>=0) GAME.stage4.contracts[idx] = obj;
+    else GAME.stage4.contracts.push(obj);
+
+    addLog({
+      playerId: p.id,
+      playerName: p.name,
+      kind: "contract",
+      prompt: `${causeText}｜${ideaText}`,
+      fields: {
+        contractCause: causeText,
+        contractIdea: ideaText,
+        contractCanDo: canDo,
+        contractHelp: help || "無"
+      },
+      reacts: {}
+    });
+
+    toast("已儲存契約");
+
+    if(GAME.turn.playerIndex < ps.length-1){
+      GAME.turn.playerIndex += 1;
+      render();
+    }else{
+      const doneN = (GAME.stage4.contracts||[]).length;
+      if(doneN >= ps.length){
+        setTimeout(()=>{
+          const ok = confirm("🎉 恭喜完成本局！\n\n是否現在匯出 CSV？\n（按『取消』就先不匯出，資料仍保留）");
+          if(ok) exportCSV();
+          GAME.stage = "done";
+          render();
+        }, 50);
+      }else{
+        render();
+      }
+    }
+  };
+}
+
+/** =========================
+ *  Done
+ *  ========================= */
+function renderDone(){
+  const ps = getPlayers();
+  const top5 = computeTop5();
+  const contracts = GAME.stage4.contracts || [];
+
+  mainPanel.innerHTML = `
+    <h2 style="margin:0 0 6px">✅ 恭喜結束｜本局總結</h2>
+    <div class="hint">可按右上角「匯出CSV」（UTF-16LE，Excel 不亂碼）。</div>
+    <div class="hr"></div>
+
+    <div class="card">
+      <div class="head">
+        <div class="title"><div class="icon">🪙</div><div>TOP5（原因 + 點子）</div></div>
+      </div>
+      <div class="body">
+        ${top5.map((x,i)=>`
+          <div style="margin:10px 0">
+            <div class="row" style="justify-content:space-between">
+              <div style="font-weight:900">${i+1}. 點子：${escapeHtml(x.text)}</div>
+              <span class="pill ok">${x.total} 票</span>
+            </div>
+            <div class="hint">原因：${escapeHtml(x.causeText)}</div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+
+    <div style="height:12px"></div>
+    <div class="card">
+      <div class="head">
+        <div class="title"><div class="icon">📝</div><div>行動契約卡</div></div>
+      </div>
+      <div class="body">
+        ${contracts.map(c=>{
+          const p = getPlayer(c.playerId);
+          return `
+            <div class="listItem">
+              <div class="row" style="gap:10px">
+                <div class="miniIcon">${escapeHtml((p?.name||"?").slice(0,1))}</div>
+                <div>
+                  <div style="font-weight:900">${escapeHtml(p?.name||"")}</div>
+                  <div class="hint"><b>原因：</b>${escapeHtml(c.causeText)}</div>
+                  <div class="hint"><b>點子：</b>${escapeHtml(c.ideaText)}</div>
+                  <div class="hint"><b>我可以做什麼：</b>${escapeHtml(c.canDo)}</div>
+                  <div class="hint"><b>需要協助：</b>${escapeHtml(c.help||"無")}</div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("") || `<div class="hint">（尚無契約）</div>`}
+      </div>
+    </div>
+
+    <div style="height:12px"></div>
+    <div class="card">
+      <div class="head">
+        <div class="title"><div class="icon">🪨</div><div>成長石總覽</div></div>
+      </div>
+      <div class="body">
+        ${ps.map(p=>`
+          <div class="row" style="justify-content:space-between">
+            <div style="font-weight:900">${escapeHtml(p.name)}</div>
+            <span class="pill ok">🪨 ${p.growth||0}</span>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+/** Top buttons **/
+$("#btnReset").onclick = ()=> hardReset();
+$("#btnExportCSV").onclick = ()=> exportCSV();
+
+/** Start **/
+render();
+</script>
+</body>
+</html>
