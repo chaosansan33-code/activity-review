@@ -215,41 +215,50 @@
       border:1px solid var(--line); border-radius:16px; background:#fff; padding:10px 12px;
     }
 
-    /* ===== Stage Intro Overlay (FIX: fit screen) ===== */
+    /* ===== Stage Intro Overlay (mobile safe) ===== */
 .overlay{
   position:fixed; inset:0;
   display:none;
   align-items:center; justify-content:center;
   background: rgba(17,24,39,.55);
   z-index: 120;
-  padding: 14px;
+  padding: 12px;
   backdrop-filter: blur(6px);
 }
 
-/* ✅ 讓卡牌盒子本身不會超出螢幕 */
+/* 用 svh/dvh 避免手機網址列造成 vh 失真 */
 .overlay .box{
   width: min(860px, 100%);
-  max-height: 90vh;              /* ✅ 關鍵：整張卡不超過螢幕高度 */
-  display: flex;                  /* ✅ 讓上面媒體區 + 下面按鈕區可分配高度 */
-  flex-direction: column;
+  height: min(92svh, 720px);      /* ✅ 直接給高度上限 */
+  max-height: 92svh;
+  display:flex;
+  flex-direction:column;
   border-radius: 22px;
-  background: #fff;
-  border: 1px solid rgba(255,255,255,.5);
+  background:#fff;
+  border:1px solid rgba(255,255,255,.5);
   box-shadow: 0 20px 60px rgba(0,0,0,.25);
-  overflow: hidden;
+  overflow:hidden;
 }
 
-/* ✅ 媒體區吃掉剩下空間（不會把按鈕擠爆） */
+/* 如果瀏覽器支援 dvh，就更準 */
+@supports (height: 1dvh){
+  .overlay .box{
+    height: min(92dvh, 720px);
+    max-height: 92dvh;
+  }
+}
+
 .overlay .mediaWrap{
-  background: #0b1220;
-  flex: 1;                        /* ✅ 關鍵：自動撐滿剩餘高度 */
-  min-height: 0;                  /* ✅ 關鍵：允許內容縮小，避免溢出 */
+  background:#0b1220;
+  flex:1 1 auto;
+  min-height:0;                 /* ✅ 允許縮小避免溢出 */
   display:flex;
   align-items:center;
   justify-content:center;
+  padding: 8px;                 /* ✅ 讓圖片不會貼邊 */
 }
 
-/* ✅ 圖片/影片永遠等比例縮放、完整顯示、不裁切 */
+/* 圖片/影片：完整顯示、不裁切、不超出 */
 .overlay img,
 .overlay video{
   max-width: 100%;
@@ -260,20 +269,18 @@
   object-fit: contain;
 }
 
-/* ✅ 如果你是像素風（你這張看起來是），加這行會更銳利 */
-.overlay img{
-  image-rendering: pixelated;
-}
+/* 像素圖更銳利（可留） */
+.overlay img{ image-rendering: pixelated; }
 
 .overlay .foot{
+  flex:0 0 auto;
   padding: 12px 14px;
   display:flex;
   justify-content:space-between;
   align-items:center;
   gap:10px;
-  border-top: 1px solid var(--line);
+  border-top:1px solid var(--line);
   background: linear-gradient(180deg, #ffffff, #fafafa);
-  flex: 0 0 auto;                 /* ✅ 按鈕區固定，不被擠掉 */
 }
 
 .overlay .titleLine{
@@ -2221,6 +2228,7 @@ $("#btnExportCSV").onclick = ()=> exportCSV();
 </script>
 </body>
 </html>
+
 
 
 
