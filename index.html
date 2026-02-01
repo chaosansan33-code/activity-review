@@ -547,7 +547,19 @@ function requestStageIntroIfNeeded(stage){
     GAME.ui.pendingIntroKey = `stage:${stage}`;
   }
 }
+// ✅ 強制顯示某個 stage 的封面（不管之前播過沒）
+function forceStageIntro(stage){
+  GAME.ui = GAME.ui || { pendingIntroKey:null, shownStageIntro:{} };
+  GAME.ui.shownStageIntro = GAME.ui.shownStageIntro || {};
 
+  // 清掉「已播過」記錄，避免被擋住
+  delete GAME.ui.shownStageIntro[stage];
+
+  // 直接指定 pending intro
+  GAME.ui.pendingIntroKey = `stage:${stage}`;
+
+  saveGame();
+}
 function requestPigIntro(){
   GAME.ui = GAME.ui || {pendingIntroKey:null, shownStageIntro:{}};
   GAME.ui.pendingIntroKey = "pig";
@@ -2229,12 +2241,13 @@ $("#btnExportCSV").onclick = ()=> exportCSV();
 
 /** Start **/
 (function boot(){
-  requestStageIntroIfNeeded("lobby");
+  forceStageIntro("lobby");
   render();
 })();
 </script>
 </body>
 </html>
+
 
 
 
