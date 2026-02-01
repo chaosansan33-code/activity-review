@@ -268,7 +268,12 @@
   display:block;
   object-fit: contain;
 }
-
+/* ===== 修正 mp4 與圖片尺寸不一致（只影響 video） ===== */
+.overlay video{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 /* 像素圖更銳利（可留） */
 .overlay img{ image-rendering: pixelated; }
 
@@ -2248,6 +2253,7 @@ $("#btnExportCSV").onclick = ()=> exportCSV();
 </script>
 </body>
 </html>
+
 
 
 
