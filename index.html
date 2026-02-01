@@ -1057,6 +1057,7 @@ function hardReset(){
   GAME = newGame();
   saveGame();
   toast("已重置本局");
+  forceStageIntro("lobby");
   render();
 }
 
@@ -2247,6 +2248,7 @@ $("#btnExportCSV").onclick = ()=> exportCSV();
 </script>
 </body>
 </html>
+
 
 
 
